@@ -18,6 +18,9 @@ $router->get('/', function () use ($router) {
 });
 
 $router->group(['prefix' => 'api'], function () use ($router) {
+    //gate setting
+    $router->post('gate/setting',  ['uses' => 'ParkirController@gateSetting']);
+
     // operator 
     $router->get('shift',  ['uses' => 'OperatorController@showAllShift']);
     $router->post('auth',  ['uses' => 'OperatorController@doLogin']);
@@ -27,7 +30,7 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->get('parkir',  ['uses' => 'ParkirController@index']);
 
     // masuk parkir 
-    $router->get('parkir/in/{kategori}',  ['uses' => 'ParkirController@parkirIn']);
+    $router->post('parkir/in',  ['uses' => 'ParkirController@parkirIn']);
     $router->post('member/in',  ['uses' => 'ParkirController@memberIn']);
 
     // keluar parkir
@@ -36,6 +39,7 @@ $router->group(['prefix' => 'api'], function () use ($router) {
 
     //member
     $router->post('member',  ['uses' => 'MemberController@index']);
+    $router->post('member/info',  ['uses' => 'MemberController@infoMember']);
     $router->post('member/topup',  ['uses' => 'MemberController@memberTopup']);
 
     // set expired data for cron_job *WARNING*

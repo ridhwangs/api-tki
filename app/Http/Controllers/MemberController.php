@@ -38,6 +38,22 @@ class MemberController extends Controller
         return response()->json($response);
     }
 
+    public function infoMember(Request $request)
+    {
+        DB::statement("SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));");
+        $query = Member::leftJoin('member_transaksi','member_transaksi.rfid','member.rfid')
+                ->selectRaw('member.kendaraan_id, member.no_kend, member.status ,member.jenis_member, member.rfid, member.tgl_awal,SUM(member_transaksi.hari) AS jumlah_hari, SUM(member_transaksi.jumlah) AS saldo')
+                ->where('member.rfid', $request->rfid)
+                ->groupBy('member.rfid')
+                ->get();
+
+        $response = [
+            'count' => $query->count(),
+            'data' => $query
+        ];
+        return response()->json($response);
+    }
+
     public function memberTopup(Request $request)
     {
         $validasiMember = Member::where('rfid', $request->rfid)->first();

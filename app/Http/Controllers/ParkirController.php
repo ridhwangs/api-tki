@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use App\Models\Parkir;
 use App\Models\Member;
 use App\Models\Tarif;
+use App\Models\Gate;
 use DateTime;
 
 class ParkirController extends Controller
@@ -26,18 +27,11 @@ class ParkirController extends Controller
         //
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $where = [
-            'status' => 'masuk'
-        ];
-        
-        $parkir = Parkir::where($where)->get();
-        $response = [
-            'count' => $parkir->count(),
-            'data' => $parkir
-        ];
-        return response()->json($response);
+        $response = Gate::where('api_key', $request->api_key)->first();   
+ 
+        return response()->json($response, 200);
     }
 
     function generateBarcodeNumber() {
@@ -76,14 +70,14 @@ class ParkirController extends Controller
         return Parkir::where(['no_ticket' => $number ,'status' => 'masuk'])->exists();
     }
 
-    public function parkirIn($kategori)
+    public function parkirIn(Request $request)
     {
    
         $data = [
             'no_ticket' => $this->generateTicketNumber(),
             'barcode_id' => $this->generateBarcodeNumber(),
             'check_in' => date('Y-m-d H:i:s'),
-            'kategori' => $kategori,
+            'kategori' => $request->kategori,
             'status' => 'masuk',
         ];
 
@@ -91,7 +85,8 @@ class ParkirController extends Controller
             $response = [
                 'status' => true,
                 'message' => 'Berhasil membuat data',
-                'code' => 201
+                'code' => 201,
+                'data' => $data,
             ];
         }else{
             $response = [
@@ -244,9 +239,6 @@ class ParkirController extends Controller
                     $response = [
                         'status' => $status,
                         'rfid' => $request->rfid,
-                        'registrasi_date' => $query->tgl_awal,
-                        'expired_date' => $expired_date,
-                        'saldo' => $query->saldo,
                         'message' => $message,
                         'code' => 201
                     ];
@@ -399,6 +391,25 @@ class ParkirController extends Controller
             ];
         }
 
+        return response()->json($response, 200);
+    }
+
+    public function gateSetting(Request $request)
+    {
+        $data = Gate::where('api_key', $request->api_key)->first();
+        if($data){
+            $response = [
+                'status' => true,
+                'code' => 205,
+                'data' => $data
+            ];
+        }else{
+            $response = [
+                'status' => false,
+                'message' => 'Data tidak ditemukan',
+                'code' => 204
+            ];
+        }
         return response()->json($response, 200);
     }
 
