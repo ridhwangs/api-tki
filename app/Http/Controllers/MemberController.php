@@ -48,14 +48,22 @@ class MemberController extends Controller
                         ->groupBy('member.rfid')
                         ->first();
         if(!empty($query)){
-            $registrasi_date = Carbon::createFromFormat('Y-m-d', $query->tgl_awal);
-            $daysToAdd = $query->jumlah_hari;
-            $expired_date = date('Y-m-d', strtotime($registrasi_date->addDays($daysToAdd)));
+            if($query->jenis_member == 'free'){
+                $expired_date = date('Y-m-d', strtotime($registrasi_date->addDays(30)));
+                $days = 0;
+            }else{
+                 $registrasi_date = Carbon::createFromFormat('Y-m-d', $query->tgl_awal);
+                $daysToAdd = $query->jumlah_hari;
+                $expired_date = date('Y-m-d', strtotime($registrasi_date->addDays($daysToAdd)));
+
+                $datetime1 = new DateTime(date('Y-m-d'));
+                $datetime2 = new DateTime($expired_date);
+                $interval = $datetime1->diff($datetime2);
+                $days = $interval->format('%a');
+            }
+           
             
-            $datetime1 = new DateTime(date('Y-m-d'));
-            $datetime2 = new DateTime($expired_date);
-            $interval = $datetime1->diff($datetime2);
-            $days = $interval->format('%a');
+        
 
             $response = [
                 'expired_date' => $expired_date,
