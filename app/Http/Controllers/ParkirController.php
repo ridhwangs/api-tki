@@ -34,6 +34,19 @@ class ParkirController extends Controller
         return response()->json($response, 200);
     }
 
+    public function info(Request $request)
+    {
+        $parkir_in = Parkir::where('status','masuk')->whereDate('parkir.check_in', $request->tanggal)->count();
+        $parkir_out = Parkir::where('status','keluar')->whereDate('parkir.check_in', $request->tanggal)->count();
+        $response = [
+            'status' => true,
+            'parkir_in' => $parkir_in,
+            'parkir_out' => $parkir_out,
+            'code' => '202'
+        ];
+        return response()->json($response, 200);
+    }
+
     function generateBarcodeNumber() {
         $number = mt_rand(1000000000, 9999999999); // better than rand()
     
@@ -72,10 +85,11 @@ class ParkirController extends Controller
 
     public function parkirIn(Request $request)
     {
-   
+        $kendaraan = DB::table('kendaraan')->where('kategori', $request->kategori)->first();   
         $data = [
             'no_ticket' => $this->generateTicketNumber(),
             'barcode_id' => $this->generateBarcodeNumber(),
+            'kendaraan_id' => $kendaraan->kendaraan_id,
             'check_in' => date('Y-m-d H:i:s'),
             'kategori' => $request->kategori,
             'status' => 'masuk',
@@ -112,21 +126,88 @@ class ParkirController extends Controller
         $result = Parkir::where('no_ticket', $request->barcode_id)->orWhere('barcode_id', $request->barcode_id)->first();
         if(!empty($result)){
             if($result->status == 'masuk'){
-                $settingTarif = Tarif::where('api_key', $this->API_KEY)->first();
-               
-                $time1 = new DateTime($result->check_in);
+                $response = [
+                    'status' => true,
+                    'no_kend' => $request->no_kend,
+                    'data' => $result,
+                    'code' => 201
+                ];               
+            }else{
+                $response = [
+                    'status' => false,
+                    'message' => 'Data sudah keluar pada '. $result->check_out,
+                    'code' => 404
+                ];
+            }
+            
+        }else{
+            $response = [
+                'status' => false,
+                'message' => 'Data tidak ditemukan',
+                'code' => 404
+            ];
+        }
+        
+        return response()->json($response, 200);
+    }
+
+    public function parkirBayar(Request $request)
+    {
+        $operator = DB::table('operator')->where('username', $request->created_by)->first();
+        $data = [
+            'check_out' => date('Y-m-d H:i:s'),
+            'no_kend' => $request->no_kend,
+            'tarif' => $request->tarif,
+            'bayar' => $request->bayar,
+            'keterangan' => $request->keterangan,
+            'kategori' => $request->kategori,
+            'kendaraan_id' => $request->kendaraan_id,
+            'status' => 'keluar',
+            'shift_id' => $request->shift_id,
+            'created_by' => $request->created_by,
+            'operator_id' => $operator->operator_id,
+        ];
+        if (Parkir::where('parkir_id', $request->parkir_id)->update($data)) {
+            $response = [
+                'status' => true,
+                'message' => 'Berhasil update kategori',
+                'code' => 201,
+            ];
+        }else{
+            $response = [
+                'status' => false,
+                'message' => 'Gagal update kategori',
+                'code' => 404
+            ];
+        } 
+        return response()->json($response, 200);
+    }
+
+    public function getTarif(Request $request)
+    {
+        $settingTarif = Tarif::where('api_key', $request->api_key)->first();
+        
+        $result = Parkir::join('kendaraan','kendaraan.kendaraan_id','parkir.kendaraan_id')->where('parkir.parkir_id', $request->parkir_id)->first();
+        if($result){
+            $time1 = new DateTime($result->check_in);
+            if($result->status == 'masuk'){
                 $time2 = new DateTime(date('Y-m-d H:i:s'));
-                $durasi = $time1->diff($time2);
+            }else{
+                $time2 = new DateTime(date('Y-m-d H:i:s', strtotime($result->check_out)));
+            }
+            
+            $durasi = $time1->diff($time2);
 
-                $jam = $durasi->h;
-                $menit = $durasi->i;
-
+            $hari = $durasi->d;
+            $jam = $durasi->h;
+            $menit = $durasi->i;
+            if($result->status == 'masuk'){
                 if($settingTarif->tarif_berlaku == 'flat'){
-                    $queryTarif = DB::table('tarif_flat')->where('kendaraan_id', $request->kendaraan_id)->first();
+                    $queryTarif = DB::table('tarif_flat')->where('kendaraan_id', $result->kendaraan_id)->first();
                     $tarif = $query->tarif;
                     $keterangan = 'Flat';
                 }elseif($settingTarif->tarif_berlaku == 'progressive'){
-                    $queryTarif = DB::table('tarif_progressive')->where('kendaraan_id', $request->kendaraan_id)->first();
+                    $queryTarif = DB::table('tarif_progressive')->where('kendaraan_id', $result->kendaraan_id)->first();
                     if ($jam <= 1) {
                         $ke = 1;
                         $tarif = $queryTarif->tarif_1;
@@ -154,40 +235,40 @@ class ParkirController extends Controller
                         'code' => 404
                     ];
                 }
-                
-                $data = [
-                    'check_out' => date('Y-m-d H:i:s'),
-                    'no_kend' => $request->no_kend,
-                    'kendaraan_id' => $request->kendaraan_id,
-                    'tarif' => $tarif,
-                    'bayar' => $request->bayar,
-                    'keterangan' => 'Durasi '.$jam.' Jam '.$menit.' Menit '.$keterangan,
-                    'status' => 'keluar',
-                    'operator_id' => $request->operator_id,
-                    'shift_id' => $request->shift_id,
-                    'created_by' => $request->created_by,
-                    'updated_at' => date('Y-m-d H:i:s'),
-                ];
-
-                if (Parkir::where('parkir_id', $result->parkir_id)->update($data)) {
-                    $response = [
-                        'status' => true,
-                        'message' => 'Berhasil',
-                        'code' => 201,
-                        'data' => [
-                            'no_ticket' => $result->no_ticket,
-                            'barcode_id' => $result->barcode_id,       
-                        ],
-                    ];
-                }
             }else{
-                $response = [
-                    'status' => false,
-                    'message' => 'Data sudah keluar pada '. $result->check_out,
-                    'code' => 404
-                ];
+                $tarif = $result->tarif;
+                $keterangan = $result->keterangan;
             }
-            
+            if($result->status == 'masuk'){
+                $check_out = date('Y-m-d H:i:s');
+            }else{
+                $check_out = $result->check_out;
+            }
+            $data = [
+                'parkir_id' => $result->parkir_id,
+                'no_ticket' => $result->no_ticket,
+                'barcode_id' => $result->barcode_id,
+                'kategori' => $result->kategori,
+                'kendaraan_id' => $result->kendaraan_id,
+                'nama_kendaraan' => $result->nama_kendaraan,
+                'check_in' => $result->check_in,
+                'check_out' => $check_out,
+                'tarif' => $tarif,
+                'bayar' => $result->bayar,
+                'hari' => $hari,
+                'jam' => $jam,
+                'menit' => $menit,
+                'keterangan' => $keterangan,
+                'status' => $result->status,
+                'no_kend' => $result->no_kend,
+            ];
+
+            $nm_kendaraan = DB::table('kendaraan')->where('kategori', $result->kategori)->get();
+            $response = [
+                'status' => true,
+                'nm_kendaraan' => $nm_kendaraan,
+                'data' => $data,
+            ];
         }else{
             $response = [
                 'status' => false,
@@ -195,6 +276,7 @@ class ParkirController extends Controller
                 'code' => 404
             ];
         }
+        
         
         return response()->json($response, 200);
     }
@@ -341,6 +423,8 @@ class ParkirController extends Controller
 
                 $response = [
                     'status' => true,
+                    'parkir_id' => $query->parkir_id,
+                    'rfid' => $request->rfid,
                     'expired_date' => $expired_date,
                     'saldo' => $saldo->saldo,
                     'message' => 'Berhasil',
@@ -426,6 +510,56 @@ class ParkirController extends Controller
                 'code' => 204
             ];
         }
+        return response()->json($response, 200);
+    }
+
+    public function setKategori(Request $request)
+    {
+        $where = [
+            'parkir_id' => $request->parkir_id
+        ];
+        $kendaraan = DB::table('kendaraan')->where('kategori', $request->kategori)->first();
+        $data = [
+            'kategori' => $request->kategori,
+            'kendaraan_id' => $kendaraan->kendaraan_id,
+        ];
+        if (Parkir::where($where)->update($data)) {
+            $response = [
+                'status' => true,
+                'message' => 'Berhasil update kategori',
+                'code' => 201,
+            ];
+        }else{
+            $response = [
+                'status' => false,
+                'message' => 'Gagal update kategori',
+                'code' => 404
+            ];
+        } 
+        return response()->json($response, 200);
+    }
+
+    public function setKendaraan(Request $request)
+    {
+        $where = [
+            'parkir_id' => $request->parkir_id
+        ];
+        $data = [
+            'kendaraan_id' => $request->kendaraan_id,
+        ];
+        if (Parkir::where($where)->update($data)) {
+            $response = [
+                'status' => true,
+                'message' => 'Berhasil update kategori',
+                'code' => 201,
+            ];
+        }else{
+            $response = [
+                'status' => false,
+                'message' => 'Gagal update kategori',
+                'code' => 404
+            ];
+        } 
         return response()->json($response, 200);
     }
 

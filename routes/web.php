@@ -25,9 +25,11 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->get('shift',  ['uses' => 'OperatorController@showAllShift']);
     $router->post('auth',  ['uses' => 'OperatorController@doLogin']);
     $router->post('operator/laporan',  ['uses' => 'OperatorController@laporan']);
+    $router->post('operator/laporan/print',  ['uses' => 'OperatorController@print']);
 
     // menu parkir
     $router->get('parkir',  ['uses' => 'ParkirController@index']);
+    $router->post('parkir/info',  ['uses' => 'ParkirController@info']);
 
     // masuk parkir 
     $router->post('parkir/in',  ['uses' => 'ParkirController@parkirIn']);
@@ -35,7 +37,12 @@ $router->group(['prefix' => 'api'], function () use ($router) {
 
     // keluar parkir
     $router->post('parkir/out',  ['uses' => 'ParkirController@parkirOut']);
+    $router->post('parkir/bayar',  ['uses' => 'ParkirController@parkirBayar']);
     $router->post('member/out',  ['uses' => 'ParkirController@memberOut']);
+
+    $router->post('parkir/tarif',  ['uses' => 'ParkirController@getTarif']);
+    $router->post('parkir/kategori',  ['uses' => 'ParkirController@setKategori']);
+    $router->post('parkir/kendaraan',  ['uses' => 'ParkirController@setKendaraan']);
 
     //member
     $router->post('member',  ['uses' => 'MemberController@index']);

@@ -26,7 +26,21 @@ class MemberController extends Controller
       
         DB::statement("SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));");
         $query = Member::leftJoin('member_transaksi','member_transaksi.rfid','member.rfid')
-                ->selectRaw('member.kendaraan_id, member.no_kend, member.status ,member.jenis_member, member.rfid, member.tgl_awal,SUM(member_transaksi.hari) AS jumlah_hari, SUM(member_transaksi.jumlah) AS saldo')
+                ->join('kendaraan','kendaraan.kendaraan_id','member.kendaraan_id')
+                ->selectRaw('member.nama AS nama, 
+                            member.alamat AS alamat,
+                            member.jenis_member AS jenis_member,
+                            member.tgl_awal AS tgl_awal,
+                            member.kendaraan_id, 
+                            member.no_kend, 
+                            member.status, 
+                            member.jenis_member, 
+                            member.rfid, 
+                            member.tgl_awal,
+                            member.status AS status, 
+                            kendaraan.kategori AS ketegori,
+                            SUM(member_transaksi.hari) AS jumlah_hari,
+                            SUM(member_transaksi.jumlah) AS saldo')
                 ->where('member.status', $request->status)
                 ->groupBy('member.rfid')
                 ->get();
@@ -62,9 +76,6 @@ class MemberController extends Controller
                 $days = $interval->format('%a');
             }
            
-            
-        
-
             $response = [
                 'expired_date' => $expired_date,
                 'remaining' => $days,
