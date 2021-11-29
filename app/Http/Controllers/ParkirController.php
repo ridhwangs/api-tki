@@ -85,11 +85,18 @@ class ParkirController extends Controller
 
     public function parkirIn(Request $request)
     {
-        $kendaraan = DB::table('kendaraan')->where('kategori', $request->kategori)->first();   
+        $kendaraan = DB::table('kendaraan')->where('kategori', $request->kategori)->first();
+        $barcode_id = $this->generateBarcodeNumber();
+        $imageName = $request->kategori.'_'.$barcode_id;
+        if($request->file('image')){
+            $request->file('image')->move(storage_path('images'), $imageName);
+        }
+
         $data = [
             'no_ticket' => $this->generateTicketNumber(),
-            'barcode_id' => $this->generateBarcodeNumber(),
+            'barcode_id' => $barcode_id,
             'kendaraan_id' => $kendaraan->kendaraan_id,
+            'image_in' => $imageName,
             'check_in' => date('Y-m-d H:i:s'),
             'kategori' => $request->kategori,
             'status' => 'masuk',
@@ -106,14 +113,14 @@ class ParkirController extends Controller
             }else{
                 $response = [
                     'status' => false,
-                    'message' => 'Gagal membuat data',
+                    'message' => 'Gagal membuat data level 1',
                     'code' => 404
                 ];
             }             
         }else{
             $response = [
                 'status' => false,
-                'message' => 'Gagal membuat data',
+                'message' => 'Gagal membuat data level 0',
                 'code' => 404
             ];
         } 
@@ -126,6 +133,7 @@ class ParkirController extends Controller
         $result = Parkir::where('no_ticket', $request->barcode_id)->orWhere('barcode_id', $request->barcode_id)->first();
         if(!empty($result)){
             if($result->status == 'masuk'){
+                
                 $response = [
                     'status' => true,
                     'no_kend' => $request->no_kend,
@@ -563,4 +571,19 @@ class ParkirController extends Controller
         return response()->json($response, 200);
     }
 
+    public function image($imageName)
+    {
+        $image_path = storage_path('images/') . $imageName;
+        if (file_exists($image_path)) {
+            $file = file_get_contents($image_path);
+            return response($file, 200)->header('Content-Type', 'image/jpeg');
+        }
+       
+        $response = [
+            'status' => false,
+            'message' => 'Gagal mengambil data',
+            'code' => 404
+        ];
+        return response()->json($response, 200);
+    }
 }

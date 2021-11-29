@@ -35,10 +35,13 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->post('parkir/in',  ['uses' => 'ParkirController@parkirIn']);
     $router->post('member/in',  ['uses' => 'ParkirController@memberIn']);
 
+    $router->get('image/{imageName}',  ['uses' => 'ParkirController@image']);
+
     // keluar parkir
     $router->post('parkir/out',  ['uses' => 'ParkirController@parkirOut']);
     $router->post('parkir/bayar',  ['uses' => 'ParkirController@parkirBayar']);
     $router->post('member/out',  ['uses' => 'ParkirController@memberOut']);
+    
 
     $router->post('parkir/tarif',  ['uses' => 'ParkirController@getTarif']);
     $router->post('parkir/kategori',  ['uses' => 'ParkirController@setKategori']);
