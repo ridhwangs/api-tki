@@ -256,6 +256,7 @@ class ParkirController extends Controller
                 'parkir_id' => $result->parkir_id,
                 'no_ticket' => $result->no_ticket,
                 'barcode_id' => $result->barcode_id,
+                'image_in' => $result->image_in,
                 'kategori' => $result->kategori,
                 'kendaraan_id' => $result->kendaraan_id,
                 'nama_kendaraan' => $result->nama_kendaraan,
