@@ -40,6 +40,12 @@ class OperatorController extends Controller
         if($shift->jam_awal >= $jamSekarang || $shift->jam_akhir <= $jamSekarang){
            
             $message = 'Jam diluar operasional';
+            $response = [
+                'status' => false,
+                'username' => $request->username,
+                'message' => $message,
+                'code' => 404
+            ];
         }else{
             $operator = Operator::where([
                         'username' => $request->username,
