@@ -36,8 +36,8 @@ class ParkirController extends Controller
 
     public function info(Request $request)
     {
-        $parkir_in = Parkir::where('status','masuk')->whereDate('parkir.check_in', $request->tanggal)->count();
-        $parkir_out = Parkir::where('status','keluar')->whereDate('parkir.check_out', $request->tanggal)->count();
+        $parkir_in = Parkir::where('status','masuk')->whereDate('parkir.status', 'masuk')->count();
+        $parkir_out = Parkir::where('status','keluar')->whereDate('parkir.status', 'keluar')->count();
         $response = [
             'status' => true,
             'parkir_in' => $parkir_in,
