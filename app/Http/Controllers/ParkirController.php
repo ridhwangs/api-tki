@@ -212,7 +212,7 @@ class ParkirController extends Controller
             if($result->status == 'masuk'){
                 if($settingTarif->tarif_berlaku == 'flat'){
                     $queryTarif = DB::table('tarif_flat')->where('kendaraan_id', $result->kendaraan_id)->first();
-                    $tarif = $query->tarif;
+                    $tarif = $queryTarif->tarif;
                     $keterangan = 'Flat';
                 }elseif($settingTarif->tarif_berlaku == 'progressive'){
                     $queryTarif = DB::table('tarif_progressive')->where('kendaraan_id', $result->kendaraan_id)->first();
