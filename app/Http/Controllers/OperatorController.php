@@ -89,6 +89,51 @@ class OperatorController extends Controller
         return response()->json($response);
     }
 
+    public function checkMaster(Request $request)
+    {
+        $operator = Operator::where([
+                        'username' => $request->username,
+                        'password' => $request->password,
+                        'status' => 1,
+                        'level' => 'hard'
+                    ]);
+            if($operator->count() > 0){
+                $status = true;
+                // $message = Str::orderedUuid();
+                $message = 'Berhasil login';
+                $data = $operator->first();
+                $insert = [
+                    'operator_id' => $data->operator_id,
+                    'shift_id' => $request->shift_id,
+                    'keterangan' => 'Gate Setting',
+                    'created_at' => date('Y-m-d H:i:s')
+                ];
+
+                $shift = Shift::where('shift_id', $request->shift_id)->first();
+
+                DB::table('log_operator')->insert($insert);
+                $response = [
+                    'status' => $status,
+                    'nama' => $data->nama,
+                    'username' => $request->username,
+                    'message' => $message,
+                    'code' => 200
+                ];
+            }else{
+                $message = 'Username / Password tidak ditemukan, silahkan coba kembali.';
+                $response = [
+                    'status' => false,
+                    'username' => $request->username,
+                    'message' => $message,
+                    'code' => 404
+                ];
+            }
+
+     
+
+        return response()->json($response);
+    }
+
     public function laporan(Request $request)
     {
         $where = [

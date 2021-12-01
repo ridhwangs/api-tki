@@ -24,6 +24,7 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     // operator 
     $router->get('shift',  ['uses' => 'OperatorController@showAllShift']);
     $router->post('auth',  ['uses' => 'OperatorController@doLogin']);
+    $router->post('auth/master',  ['uses' => 'OperatorController@checkMaster']);
     $router->post('operator/laporan',  ['uses' => 'OperatorController@laporan']);
     $router->post('operator/laporan/print',  ['uses' => 'OperatorController@print']);
 
