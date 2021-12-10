@@ -47,57 +47,22 @@ class ParkirController extends Controller
         return response()->json($response, 200);
     }
 
-    function generateBarcodeNumber() {
-        $number = mt_rand(1000000000, 9999999999); // better than rand()
-    
-        // call the same function if the barcode exists already
-        if ($this->barcodeNumberExists($number)) {
-            return generateBarcodeNumber();
-        }
-    
-        // otherwise, it's valid and can be used
-        return $number;
-    }
-    
-    function barcodeNumberExists($number) {
-        // query the database and return a boolean
-        // for instance, it might look like this in Laravel
-        return Parkir::where(['barcode_id' => $number ,'status' => 'masuk'])->exists();
-    }
-
-    function generateTicketNumber() {
-        $number = mt_rand(100000, 999999); // better than rand()
-    
-        // call the same function if the barcode exists already
-        if ($this->barcodeTicketExists($number)) {
-            return generateTicketNumber();
-        }
-    
-        // otherwise, it's valid and can be used
-        return $number;
-    }
-    
-    function barcodeTicketExists($number) {
-        // query the database and return a boolean
-        // for instance, it might look like this in Laravel
-        return Parkir::where(['no_ticket' => $number ,'status' => 'masuk'])->exists();
-    }
-
     public function parkirIn(Request $request)
     {
         $kendaraan = DB::table('kendaraan')->where('kategori', $request->kategori)->first();
-        $barcode_id = $this->generateBarcodeNumber();
+        $barcode_id = $request->barcode_id;
         $imageName = $request->kategori.'_'.$barcode_id;
+
         if($request->file('image')){
             $request->file('image')->move(storage_path('images'), $imageName);
         }
 
         $data = [
-            'no_ticket' => $this->generateTicketNumber(),
+            'no_ticket' => $request->no_tiket,
             'barcode_id' => $barcode_id,
             'kendaraan_id' => $kendaraan->kendaraan_id,
             'image_in' => $imageName,
-            'check_in' => date('Y-m-d H:i:s'),
+            'check_in' => $request->check_in,
             'kategori' => $request->kategori,
             'status' => 'masuk',
         ];
