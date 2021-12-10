@@ -69,9 +69,11 @@ class ParkirController extends Controller
 
         if (Parkir::create($data)) {
             if (Gate::where('api_key', $request->api_key)->decrement('kuota', 1)) {
+                $gate = Gate::where('api_key', $request->api_key)->first();
                 $response = [
                     'status' => true,
                     'message' =>  ucwords(str_replace('_',' ',$request->kategori)) .' ID ' .$data['barcode_id'].' / '. $data['no_ticket'],
+                    'kuota' => $gate->kuota,
                     'code' => 201,
                     'data' => $data,
                 ];
