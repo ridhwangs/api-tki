@@ -58,7 +58,7 @@ class ParkirController extends Controller
         }
 
         $data = [
-            'no_ticket' => $request->no_tiket,
+            'no_ticket' => $request->no_ticket,
             'barcode_id' => $barcode_id,
             'kendaraan_id' => $kendaraan->kendaraan_id,
             'image_in' => $imageName,
