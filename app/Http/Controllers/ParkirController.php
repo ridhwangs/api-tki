@@ -73,6 +73,7 @@ class ParkirController extends Controller
                 $response = [
                     'status' => true,
                     'message' =>  ucwords(str_replace('_',' ',$request->kategori)) .' ID ' .$data['barcode_id'].' / '. $data['no_ticket'],
+                    'check_in' => $request->check_in,
                     'kuota' => $gate->kuota,
                     'code' => 201,
                     'data' => $data,
