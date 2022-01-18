@@ -30,6 +30,7 @@ $router->group(['prefix' => 'api'], function () use ($router) {
 
     // menu parkir
     $router->get('parkir',  ['uses' => 'ParkirController@index']);
+    $router->get('sync',  ['uses' => 'ParkirController@sync']);
     $router->post('parkir/info',  ['uses' => 'ParkirController@info']);
 
     // masuk parkir 

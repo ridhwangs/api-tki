@@ -555,4 +555,41 @@ class ParkirController extends Controller
         ];
         return response()->json($response, 200);
     }
+
+    function generateBarcodeNumber() {
+        $number = mt_rand(1000000000, 9999999999); // better than rand()
+        // call the same function if the barcode exists already
+        if ($this->barcodeNumberExists($number)) {
+            return $this->generateBarcodeNumber();
+        }
+        // otherwise, it's valid and can be used
+        return $number;
+    }
+    
+    function barcodeNumberExists($number) {
+        $cekData = Parkir::where('barcode_id', $number)->exists();
+        return $cetData;
+    }
+
+    function generateTicketNumber() {
+        $number = mt_rand(10000, 99999); // better than rand()
+        // call the same function if the barcode exists already
+        if ($this->TicketExists($number)) {
+            return $this->generateTicketNumber();
+        }
+        // otherwise, it's valid and can be used
+        return $number;
+    }
+    
+    function TicketExists($number) {
+        $cekData = Parkir::where('no_ticket', $number)->exists();
+        return $cetData;
+    }
+
+    public function sync()
+    {
+        $response = Parkir::get();
+        return response()->json($response, 200);
+
+    }
 }
