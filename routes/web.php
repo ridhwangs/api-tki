@@ -35,6 +35,7 @@ $router->group(['prefix' => 'api'], function () use ($router) {
 
     // masuk parkir 
     $router->post('parkir/in',  ['uses' => 'ParkirController@parkirIn']);
+    $router->post('parkir/manual',  ['uses' => 'ParkirController@parkirManual']);
     $router->post('member/in',  ['uses' => 'ParkirController@memberIn']);
 
     $router->get('image/{imageName}',  ['uses' => 'ParkirController@image']);

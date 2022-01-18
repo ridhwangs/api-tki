@@ -96,6 +96,48 @@ class ParkirController extends Controller
         return response()->json($response, 200);
     }
 
+    public function parkirManual(Request $request)
+    {
+        $kendaraan = DB::table('kendaraan')->where('kategori', $request->kategori)->first();
+        $barcode_id = 'M'.substr($this->generateBarcodeNumber(),0,9);
+        $imageName = $request->kategori.'_'.$barcode_id;
+
+        if($request->file('image')){
+            $request->file('image')->move(storage_path('images'), $imageName);
+        }
+
+        $data = [
+            'no_ticket' => 'M'.substr($this->generateTicketNumber(),0,4),
+            'barcode_id' => $barcode_id,
+            'kendaraan_id' => $kendaraan->kendaraan_id,
+            'image_in' => $imageName,
+            'check_in' => $request->check_in,
+            'kategori' => $request->kategori,
+            'shift_id' => $request->shift_id,
+            'operator_id' => $request->operator_id,
+            'created_by' => $request->created_by,
+            'status' => 'masuk',
+        ];
+
+        if (Parkir::create($data)) {
+            $response = [
+                'status' => true,
+                'message' =>  ucwords(str_replace('_',' ',$request->kategori)) .' ID ' .$data['barcode_id'].' / '. $data['no_ticket'],
+                'check_in' => $request->check_in,
+                'code' => 201,
+                'data' => $data,
+            ];            
+        }else{
+            $response = [
+                'status' => false,
+                'message' => 'Gagal membuat data level 0',
+                'code' => 404
+            ];
+        } 
+
+        return response()->json($response, 200);
+    }
+
     public function parkirOut(Request $request)
     {
         $result = Parkir::where('no_ticket', $request->barcode_id)->orWhere('barcode_id', $request->barcode_id)->first();
@@ -568,7 +610,7 @@ class ParkirController extends Controller
     
     function barcodeNumberExists($number) {
         $cekData = Parkir::where('barcode_id', $number)->exists();
-        return $cetData;
+        return $cekData;
     }
 
     function generateTicketNumber() {
@@ -583,7 +625,7 @@ class ParkirController extends Controller
     
     function TicketExists($number) {
         $cekData = Parkir::where('no_ticket', $number)->exists();
-        return $cetData;
+        return $cekData;
     }
 
     public function sync()
