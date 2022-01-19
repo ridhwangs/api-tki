@@ -405,6 +405,7 @@ class ParkirController extends Controller
         $member = Member::where('rfid', $request->rfid)->first();
         if($member->jenis_member == 'master'){
             $response = [
+                'rfid' => $request->rfid,
                 'status' => true,
                 'message' => 'Member Master',
                 'code' => 202
