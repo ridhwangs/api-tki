@@ -401,70 +401,81 @@ class ParkirController extends Controller
 
     public function memberOut(Request $request)
     {
-        $where = [
-            'rfid' => $request->rfid,
-            'status' => 'masuk'
-        ];
-        $query = Parkir::where($where)->first();
-        if(!empty($query)){
-            $tarif = DB::table('tarif_member')->where('kendaraan_id', $query->kendaraan_id)->first();
-            $data = [
-                'check_out' => date('Y-m-d H:i:s'),
-                'status' => 'keluar',
-                'operator_id' => $request->operator_id,
-                'shift_id' => $request->shift_id,
-                'created_by' => $request->created_by,
-                'updated_at' => date('Y-m-d H:i:s'),
-                'tarif' => $tarif->jumlah,
-                'bayar' => $tarif->jumlah,
+
+        $member = Member::where('rfid', $request->rfid)->first();
+        if($member->jenis_member == 'master'){
+            $response = [
+                'status' => true,
+                'message' => 'Member Master',
+                'code' => 202
             ];
-
-            if (Parkir::where($where)->update($data)) {
-                $transaksiMember = [
-                    'rfid' => $request->rfid,
-                    'jumlah' => -$tarif->jumlah,
-                    'hari' => 0,
-                    'jenis' => 'keluar',
+        }else{
+            $where = [
+                'rfid' => $request->rfid,
+                'status' => 'masuk'
+            ];
+            $query = Parkir::where($where)->first();
+            if(!empty($query)){
+                $tarif = DB::table('tarif_member')->where('kendaraan_id', $query->kendaraan_id)->first();
+                $data = [
+                    'check_out' => date('Y-m-d H:i:s'),
+                    'status' => 'keluar',
+                    'operator_id' => $request->operator_id,
+                    'shift_id' => $request->shift_id,
                     'created_by' => $request->created_by,
-                    'created_at' => date('Y-m-d H:i:s')
+                    'updated_at' => date('Y-m-d H:i:s'),
+                    'tarif' => $tarif->jumlah,
+                    'bayar' => $tarif->jumlah,
                 ];
-                DB::table('member_transaksi')->insert($transaksiMember);
-                DB::statement("SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));");
-                $saldo = Member::join('member_transaksi','member_transaksi.rfid','member.rfid')
-                                ->selectRaw('member.kendaraan_id, member.no_kend, member.status ,member.jenis_member, member.rfid, member.tgl_awal,SUM(member_transaksi.hari) AS jumlah_hari, SUM(member_transaksi.jumlah) AS saldo')
-                                ->where('member.rfid', $request->rfid)
-                                ->groupBy('member.rfid')
-                                ->first();
-
-                $registrasi_date = Carbon::createFromFormat('Y-m-d', $saldo->tgl_awal);
-                $daysToAdd = $saldo->jumlah_hari;
-                $expired_date = date('Y-m-d', strtotime($registrasi_date->addDays($daysToAdd)));
-
-                $response = [
-                    'status' => true,
-                    'parkir_id' => $query->parkir_id,
-                    'rfid' => $request->rfid,
-                    'expired_date' => $expired_date,
-                    'saldo' => $saldo->saldo,
-                    'message' => 'Berhasil',
-                    'code' => 201
-                ];
+    
+                if (Parkir::where($where)->update($data)) {
+                    $transaksiMember = [
+                        'rfid' => $request->rfid,
+                        'jumlah' => -$tarif->jumlah,
+                        'hari' => 0,
+                        'jenis' => 'keluar',
+                        'created_by' => $request->created_by,
+                        'created_at' => date('Y-m-d H:i:s')
+                    ];
+                    DB::table('member_transaksi')->insert($transaksiMember);
+                    DB::statement("SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));");
+                    $saldo = Member::join('member_transaksi','member_transaksi.rfid','member.rfid')
+                                    ->selectRaw('member.kendaraan_id, member.no_kend, member.status ,member.jenis_member, member.rfid, member.tgl_awal,SUM(member_transaksi.hari) AS jumlah_hari, SUM(member_transaksi.jumlah) AS saldo')
+                                    ->where('member.rfid', $request->rfid)
+                                    ->groupBy('member.rfid')
+                                    ->first();
+    
+                    $registrasi_date = Carbon::createFromFormat('Y-m-d', $saldo->tgl_awal);
+                    $daysToAdd = $saldo->jumlah_hari;
+                    $expired_date = date('Y-m-d', strtotime($registrasi_date->addDays($daysToAdd)));
+    
+                    $response = [
+                        'status' => true,
+                        'parkir_id' => $query->parkir_id,
+                        'rfid' => $request->rfid,
+                        'expired_date' => $expired_date,
+                        'saldo' => $saldo->saldo,
+                        'message' => 'Berhasil',
+                        'code' => 201
+                    ];
+                }else{
+                    $response = [
+                        'status' => false,
+                        'message' => 'Gagal membuat data',
+                        'code' => 404
+                    ];
+                }
+    
+               
             }else{
                 $response = [
                     'status' => false,
-                    'message' => 'Gagal membuat data',
+                    'message' => 'RFID tidak ditemukan',
                     'code' => 404
                 ];
             }
-
-           
-        }else{
-            $response = [
-                'status' => false,
-                'message' => 'RFID tidak ditemukan',
-                'code' => 404
-            ];
         }
+      
         return response()->json($response, 200);
     }
     
