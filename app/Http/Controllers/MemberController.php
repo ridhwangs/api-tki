@@ -52,47 +52,6 @@ class MemberController extends Controller
         return response()->json($response);
     }
 
-    public function infoMember(Request $request)
-    {
-        DB::statement("SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));");
-        $query = Member::leftJoin('member_transaksi','member_transaksi.rfid','member.rfid')
-                        ->join('kendaraan','kendaraan.kendaraan_id','member.kendaraan_id')
-                        ->selectRaw('kendaraan.kategori, kendaraan.nama_kendaraan, member.nama ,member.kendaraan_id, member.no_kend, member.status ,member.jenis_member, member.rfid, member.tgl_awal,SUM(member_transaksi.hari) AS jumlah_hari, SUM(member_transaksi.jumlah) AS saldo')
-                        ->where('member.rfid', $request->rfid)
-                        ->groupBy('member.rfid')
-                        ->first();
-        if(!empty($query)){
-            if($query->jenis_member == 'free'){
-                $expired_date = null;
-                $days = 0;
-            }else{
-                $registrasi_date = Carbon::createFromFormat('Y-m-d', $query->tgl_awal);
-                $daysToAdd = $query->jumlah_hari;
-                $expired_date = date('Y-m-d', strtotime($registrasi_date->addDays($daysToAdd)));
-
-                $datetime1 = new DateTime(date('Y-m-d'));
-                $datetime2 = new DateTime($expired_date);
-                $interval = $datetime1->diff($datetime2);
-                $days = $interval->format('%a');
-            }
-           
-            $response = [
-                'expired_date' => $expired_date,
-                'remaining' => $days,
-                'data' => $query,
-                'code' => 200
-            ];
-        }else{
-            $response = [
-                'status' => false,
-                'message' => 'RFID tidak ditemukan',
-                'code' => 404
-            ];
-        }
-       
-        return response()->json($response);
-    }
-
     public function memberTopup(Request $request)
     {
         $validasiMember = Member::where('rfid', $request->rfid)->first();

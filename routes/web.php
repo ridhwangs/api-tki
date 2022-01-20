@@ -52,7 +52,6 @@ $router->group(['prefix' => 'api'], function () use ($router) {
 
     //member
     $router->post('member',  ['uses' => 'MemberController@index']);
-    $router->post('member/info',  ['uses' => 'MemberController@infoMember']);
     $router->post('member/topup',  ['uses' => 'MemberController@memberTopup']);
 
     // set expired data for cron_job *WARNING*

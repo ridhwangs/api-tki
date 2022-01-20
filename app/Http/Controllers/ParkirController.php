@@ -306,52 +306,20 @@ class ParkirController extends Controller
             Gate::where('api_key', $request->api_key)->update(['kuota' => DB::raw("`default_kuota`")]);
             $response = [
                 'status' => false,
+                'rfid' => $request->rfid,
                 'message' => 'Berhasil di reset',
                 'code' => 201
             ];
         }else{
-            DB::statement("SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));");
-            $query = Member::leftJoin('member_transaksi','member_transaksi.rfid','member.rfid')
-                            ->selectRaw('member.kendaraan_id, member.no_kend, member.status ,member.jenis_member, member.rfid, member.tgl_awal,SUM(member_transaksi.hari) AS jumlah_hari, SUM(member_transaksi.jumlah) AS saldo')
-                            ->where('member.rfid', $request->rfid)
-                            ->groupBy('member.rfid')
-                            ->first();
-            
-            if(!empty($query)){
-                $status = true;
-                $message = 'Success';
+                $query = Member::where('member.rfid', $request->rfid)->first();
                 
-                $registrasi_date = Carbon::createFromFormat('Y-m-d', $query->tgl_awal);
-                $daysToAdd = $query->jumlah_hari;
-                $expired_date = date('Y-m-d', strtotime($registrasi_date->addDays($daysToAdd)));
-                
-                if($query->jenis_member != 'free'){
-                    if($expired_date <= date('Y-m-d')){
+                if(!empty($query)){
+                    $status = true;
+                    $message = 'Member masuk Berhasil';
+                    
+                    if($query->status == 'blokir' || $query->status == 'pasif'){
                         $status = false;
-                        $message = 'Kartu expired';
-                    }
-                }elseif($query->status == 'blokir' || $query->status == 'pasif'){
-                    $status = false;
-                    $message = 'RFID Kartu tidak aktif';
-                }
-
-                $data = [
-                    'rfid' => $request->rfid,
-                    'kendaraan_id' => $query->kendaraan_id,
-                    'check_in' => date('Y-m-d H:i:s'),
-                    'kategori' => 'member',
-                    'no_kend' => $query->no_kend,
-                    'status' => 'masuk'
-                ];
-
-                $where = [
-                    'rfid' => $request->rfid,
-                    'status' => 'masuk'
-                ];
-
-                $validasiParkirDuplicate = Parkir::where($where)->count();
-                if($validasiParkirDuplicate > 0){
-                    if (Parkir::where($where)->update($data)) {
+                        $message = 'RFID Kartu tidak aktif';
                         $response = [
                             'status' => $status,
                             'rfid' => $request->rfid,
@@ -359,42 +327,75 @@ class ParkirController extends Controller
                             'code' => 201,
                         ];
                     }else{
-                        $response = [
-                            'status' => false,
-                            'message' => 'Gagal membuat data',
-                            'code' => 404
-                        ];
-                    } 
+                        if($query->jenis_member == 'free' || $query->jenis_member == 'master'){
+                            $response = [
+                                'status' => $status,
+                                'rfid' => $request->rfid,
+                                'message' => $message,
+                                'code' => 201,
+                            ];
+                        }elseif($query->jenis_member != 'free'){
+                            $data = [
+                                'rfid' => $request->rfid,
+                                'kendaraan_id' => $query->kendaraan_id,
+                                'check_in' => date('Y-m-d H:i:s'),
+                                'kategori' => 'member',
+                                'no_kend' => $query->no_kend,
+                                'status' => 'masuk'
+                            ];
+
+                            $where = [
+                                'rfid' => $request->rfid,
+                                'status' => 'masuk'
+                            ];
+
+                            $validasiParkirDuplicate = Parkir::where($where)->count();
+                            if($validasiParkirDuplicate > 0){
+                                if (Parkir::where($where)->update($data)) {
+                                    $response = [
+                                        'status' => $status,
+                                        'rfid' => $request->rfid,
+                                        'message' => $message,
+                                        'code' => 201,
+                                    ];
+                                }else{
+                                    $response = [
+                                        'status' => false,
+                                        'rfid' => $request->rfid,
+                                        'message' => 'Gagal membuat data',
+                                        'code' => 404
+                                    ];
+                                } 
+                            }else{
+                                $data['no_ticket'] = $this->generateTicketNumber();
+                                $data['barcode_id'] = $this->generateBarcodeNumber();
+                            
+                                if (Parkir::create($data)) {
+                                    $response = [
+                                        'status' => $status,
+                                        'rfid' => $request->rfid,
+                                        'message' => $message,
+                                        'code' => 201
+                                    ];
+                                }else{
+                                    $response = [
+                                        'status' => false,
+                                        'message' => 'Gagal membuat data',
+                                        'rfid' => $request->rfid,
+                                        'code' => 404
+                                    ];
+                                } 
+                            }
+                        }
+                    }
                 }else{
-                    $data['no_ticket'] = $this->generateTicketNumber();
-                    $data['barcode_id'] = $this->generateBarcodeNumber();
-                
-                    if (Parkir::create($data)) {
-                        $response = [
-                            'status' => $status,
-                            'rfid' => $request->rfid,
-                            'registrasi_date' => $query->tgl_awal,
-                            'expired_date' => $expired_date,
-                            'saldo' => $query->saldo,
-                            'message' => $message,
-                            'code' => 201
-                        ];
-                    }else{
-                        $response = [
-                            'status' => false,
-                            'message' => 'Gagal membuat data',
-                            'code' => 404
-                        ];
-                    } 
+                    $response = [
+                        'status' => false,
+                        'message' => 'RFID tidak ditemukan',
+                        'rfid' => $request->rfid,
+                        'code' => 404
+                    ];
                 }
-            
-            }else{
-                $response = [
-                    'status' => false,
-                    'message' => 'RFID tidak ditemukan',
-                    'code' => 404
-                ];
-            }
         }
         return response()->json($response, 200);
     }
