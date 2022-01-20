@@ -490,7 +490,7 @@ class ParkirController extends Controller
             'updated_at' => date('Y-m-d H:i:s')
         ];
 
-        if (Parkir::where('status','masuk')->whereDate('check_in', '<', date('Y-m-d H:i:s', strtotime("+1 days")))->update($data)) {
+        if (Parkir::where('status','masuk')->whereDate('check_in', '<', date('Y-m-d H:i:s', strtotime("-1 days")))->update($data)) {
             $response = [
                 'status' => true,
                 'message' => 'Berhasil Set to Expired data',
@@ -510,7 +510,7 @@ class ParkirController extends Controller
     public function deleteExpiredPakir()
     {
   
-        if (Parkir::where('status','expired')->whereDate('check_in', '<', date('Y-m-d H:i:s', strtotime("+4 days")))->delete()) {
+        if (Parkir::where('status','expired')->whereDate('check_in', '<', date('Y-m-d H:i:s', strtotime("-4 days")))->delete()) {
             $response = [
                 'status' => true,
                 'message' => 'Berhasil Delete data Expired',
