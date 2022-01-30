@@ -10,6 +10,8 @@ use App\Models\Parkir;
 use App\Models\Member;
 use App\Models\Tarif;
 use App\Models\Gate;
+use App\Models\Operator;
+
 use DateTime;
 
 class ParkirController extends Controller
@@ -24,7 +26,7 @@ class ParkirController extends Controller
 
     public function __construct()
     {
-        //
+        $this->member = new Member();
     }
 
     public function index(Request $request)
@@ -188,13 +190,13 @@ class ParkirController extends Controller
         if (Parkir::where('parkir_id', $request->parkir_id)->update($data)) {
             $response = [
                 'status' => true,
-                'message' => 'Berhasil update kategori',
+                'message' => 'Berhasil',
                 'code' => 201,
             ];
         }else{
             $response = [
                 'status' => false,
-                'message' => 'Gagal update kategori',
+                'message' => 'Gagal',
                 'code' => 404
             ];
         } 
@@ -311,30 +313,24 @@ class ParkirController extends Controller
                 'code' => 201
             ];
         }else{
-                $query = Member::where('member.rfid', $request->rfid)->first();
-                
+                $query = Member::where('rfid', $request->rfid)->first();
                 if(!empty($query)){
-                    $status = true;
-                    $message = 'Member masuk Berhasil';
-                    
-                    if($query->status == 'blokir' || $query->status == 'pasif'){
-                        $status = false;
-                        $message = 'RFID Kartu tidak aktif';
+                    if($query->jenis_member == 'master'){
+                            $response = [
+                                'status' => true,
+                                'rfid' => $request->rfid,
+                                'message' => 'Berhasil membuat data',
+                                'code' => 201
+                            ];
+                    }else{
+                        if($query->status == 'blokir' || $query->status == 'pasif'){
                         $response = [
-                            'status' => $status,
+                            'status' => false,
                             'rfid' => $request->rfid,
-                            'message' => $message,
+                            'message' => 'RFID Kartu tidak aktif status '. $query->status,
                             'code' => 201,
                         ];
-                    }else{
-                        if($query->jenis_member == 'free' || $query->jenis_member == 'master'){
-                            $response = [
-                                'status' => $status,
-                                'rfid' => $request->rfid,
-                                'message' => $message,
-                                'code' => 201,
-                            ];
-                        }elseif($query->jenis_member != 'free'){
+                        }else{
                             $data = [
                                 'rfid' => $request->rfid,
                                 'kendaraan_id' => $query->kendaraan_id,
@@ -353,16 +349,16 @@ class ParkirController extends Controller
                             if($validasiParkirDuplicate > 0){
                                 if (Parkir::where($where)->update($data)) {
                                     $response = [
-                                        'status' => $status,
+                                        'status' => true,
                                         'rfid' => $request->rfid,
-                                        'message' => $message,
+                                        'message' => 'Berhasil update data',
                                         'code' => 201,
                                     ];
                                 }else{
                                     $response = [
                                         'status' => false,
                                         'rfid' => $request->rfid,
-                                        'message' => 'Gagal membuat data',
+                                        'message' => 'Gagal update data',
                                         'code' => 404
                                     ];
                                 } 
@@ -372,9 +368,9 @@ class ParkirController extends Controller
                             
                                 if (Parkir::create($data)) {
                                     $response = [
-                                        'status' => $status,
+                                        'status' => true,
                                         'rfid' => $request->rfid,
-                                        'message' => $message,
+                                        'message' => 'Berhasil membuat data',
                                         'code' => 201
                                     ];
                                 }else{
@@ -403,73 +399,77 @@ class ParkirController extends Controller
     public function memberOut(Request $request)
     {
 
-        $member = Member::where('rfid', $request->rfid)->first();
+        $member = Member::with('kendaraan')->where('rfid', $request->rfid)->first();
         if($member->jenis_member == 'master'){
             $response = [
                 'rfid' => $request->rfid,
                 'jenis' => 'master',
                 'status' => true,
-                'message' => 'Member Master',
+                'message' => 'Kartu Master pada '.date('Y-m-d H:i:s'),
                 'code' => 202
             ];
         }else{
             $where = [
                 'rfid' => $request->rfid,
-                'status' => 'masuk'
             ];
+            
             $query = Parkir::where($where)->first();
             if(!empty($query)){
-                $tarif = DB::table('tarif_member')->where('kendaraan_id', $query->kendaraan_id)->first();
+
+                $operator = Operator::where('username', $request->created_by)->first();
                 $data = [
                     'check_out' => date('Y-m-d H:i:s'),
                     'status' => 'keluar',
-                    'operator_id' => $request->operator_id,
                     'shift_id' => $request->shift_id,
                     'created_by' => $request->created_by,
-                    'updated_at' => date('Y-m-d H:i:s'),
-                    'tarif' => $tarif->jumlah,
-                    'bayar' => $tarif->jumlah,
+                    'operator_id' => $operator->operator_id,
                 ];
-    
-                if (Parkir::where($where)->update($data)) {
-                    $transaksiMember = [
-                        'rfid' => $request->rfid,
-                        'jumlah' => -$tarif->jumlah,
-                        'hari' => 0,
-                        'jenis' => 'keluar',
-                        'created_by' => $request->created_by,
-                        'created_at' => date('Y-m-d H:i:s')
-                    ];
-                    DB::table('member_transaksi')->insert($transaksiMember);
-                    DB::statement("SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));");
-                    $saldo = Member::join('member_transaksi','member_transaksi.rfid','member.rfid')
-                                    ->selectRaw('member.kendaraan_id, member.no_kend, member.status ,member.jenis_member, member.rfid, member.tgl_awal,SUM(member_transaksi.hari) AS jumlah_hari, SUM(member_transaksi.jumlah) AS saldo')
-                                    ->where('member.rfid', $request->rfid)
-                                    ->groupBy('member.rfid')
-                                    ->first();
-    
-                    $registrasi_date = Carbon::createFromFormat('Y-m-d', $saldo->tgl_awal);
-                    $daysToAdd = $saldo->jumlah_hari;
-                    $expired_date = date('Y-m-d', strtotime($registrasi_date->addDays($daysToAdd)));
-    
+                if (Parkir::where('parkir_id', $request->parkir_id)->where('status', 'masuk')->update($data)) {
                     $response = [
                         'status' => true,
-                        'parkir_id' => $query->parkir_id,
-                        'rfid' => $request->rfid,
-                        'expired_date' => $expired_date,
-                        'saldo' => $saldo->saldo,
                         'message' => 'Berhasil',
-                        'code' => 201
+                        'code' => 201,
                     ];
                 }else{
                     $response = [
                         'status' => false,
-                        'message' => 'Gagal membuat data',
+                        'message' => 'Gagal',
                         'code' => 404
                     ];
                 }
-    
-               
+
+                $sum_hari = $this->member->member_transaksi($request->rfid)->where('status', 'approve')->sum('hari');
+                $daysToAdd = $sum_hari;
+                $registrasi_date = Carbon::createFromFormat('Y-m-d', $member->tgl_awal);
+                $expired_date = date('Y-m-d', strtotime($registrasi_date->addDays($daysToAdd)));
+                $parkir = Parkir::where('parkir_id', $query->parkir_id)->first();
+
+                $time1 = new DateTime($parkir->check_in);
+                
+                if($parkir->status == 'masuk'){
+                    $time2 = new DateTime(date('Y-m-d H:i:s'));
+                }else{
+                    $time2 = new DateTime(date('Y-m-d H:i:s', strtotime($parkir->check_out)));
+                }
+
+                $durasi = $time1->diff($time2);
+
+                $hari = $durasi->d;
+                $jam = $durasi->h;
+                $menit = $durasi->i;
+
+                $response = [
+                    'status' => true,
+                    'rfid' => $member->rfid,
+                    'expired_date' => $expired_date,
+                    'remaining' => 0,
+                    'member' => $member,
+                    'parkir' => $parkir,
+                    'parkir_id' => $parkir->parkir_id,
+                    'hari' => $hari,
+                    'jam' => $jam,
+                    'menit' => $menit,
+                ];
             }else{
                 $response = [
                     'status' => false,
