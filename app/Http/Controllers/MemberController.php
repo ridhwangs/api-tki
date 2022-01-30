@@ -24,32 +24,52 @@ class MemberController extends Controller
     public function index(Request $request)
     {
       
-        DB::statement("SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));");
-        $query = Member::leftJoin('member_transaksi','member_transaksi.rfid','member.rfid')
-                ->join('kendaraan','kendaraan.kendaraan_id','member.kendaraan_id')
-                ->selectRaw('member.nama AS nama, 
-                            member.alamat AS alamat,
-                            member.jenis_member AS jenis_member,
-                            member.tgl_awal AS tgl_awal,
-                            member.kendaraan_id, 
-                            member.no_kend, 
-                            member.status, 
-                            member.jenis_member, 
-                            member.rfid, 
-                            member.tgl_awal,
-                            member.status AS status, 
-                            kendaraan.kategori AS ketegori,
-                            SUM(member_transaksi.hari) AS jumlah_hari,
-                            SUM(member_transaksi.jumlah) AS saldo')
-                ->where('member.status', $request->status)
-                ->groupBy('member.rfid')
-                ->get();
-
+        $query = Member::with('kendaraan')->where('jenis_member', '!=', 'master')->get();
         $response = [
             'count' => $query->count(),
             'data' => $query
         ];
         return response()->json($response);
+    }
+
+    public function MemberRegistrasi(Request $request)
+    {
+        $validasiMember = Member::where('rfid', $request->rfid)->first();
+        if(!empty($validasiMember)){
+            $response = [
+                'status' => false,
+                'message' => 'Member sudah terdaftar',
+                'data' => $validasiMember,
+            ];
+        }else{
+            $data = [
+                'rfid' => $request->rfid,
+                'tgl_awal' => $request->tgl_awal,
+                'nama' => $request->nama,
+                'no_kend' => $request->no_kend,
+                'merk' => $request->merk,
+                'warna' => $request->warna,
+                'kendaraan_id' => $request->kendaraan_id,
+                'keterangan' => $request->keterangan,
+                'jenis_member' => $request->jenis_member,
+            ];
+            $create = Member::create($data);
+            if ($create) {
+                $response = [
+                    'status' => true,
+                    'message' => 'Member berhasil di simpan',
+                    'member_id' => $create->id
+                ];
+            }else{
+                $response = [
+                    'status' => false,
+                    'message' => 'Member Gagal di simpan',
+                ];
+            }
+            
+        }   
+
+        return response()->json($response, 200);
     }
 
     public function memberTopup(Request $request)
