@@ -52,7 +52,11 @@ $router->group(['prefix' => 'api'], function () use ($router) {
 
     //member
     $router->post('member',  ['uses' => 'MemberController@index']);
+    $router->post('member/registrasi',  ['uses' => 'MemberController@MemberRegistrasi']);
     $router->post('member/topup',  ['uses' => 'MemberController@memberTopup']);
+
+    //master
+    $router->get('kendaraan',  ['uses' => 'KendaraanController@index']);
 
     // set expired data for cron_job *WARNING*
     $router->get('parkir/expired',  ['uses' => 'ParkirController@setExpiredPakir']);
