@@ -54,6 +54,8 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->post('member',  ['uses' => 'MemberController@index']);
     $router->post('member/registrasi',  ['uses' => 'MemberController@MemberRegistrasi']);
     $router->post('member/topup',  ['uses' => 'MemberController@memberTopup']);
+    $router->post('member/info',  ['uses' => 'MemberController@memberInfo']);
+    $router->post('member/update',  ['uses' => 'MemberController@memberUpdate']);
 
     //master
     $router->get('kendaraan',  ['uses' => 'KendaraanController@index']);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Validator;
 
 use Carbon\Carbon;
 use App\Models\Member;
@@ -18,7 +19,7 @@ class MemberController extends Controller
      */
     public function __construct()
     {
-        //
+        $this->member = new Member();
     }
 
     public function index(Request $request)
@@ -29,6 +30,30 @@ class MemberController extends Controller
             'count' => $query->count(),
             'data' => $query
         ];
+        return response()->json($response);
+    }
+
+    public function memberInfo(Request $request)
+    {
+        $query = Member::with('kendaraan')->where('member_id', $request->member_id)->first();
+        if($query){
+            $sum_hari = $this->member->member_transaksi($query->rfid)->where('status', 'approve')->sum('hari');
+            $daysToAdd = $sum_hari;
+            $registrasi_date = Carbon::createFromFormat('Y-m-d', $query->tgl_awal);
+            $expired_date = date('Y-m-d', strtotime($registrasi_date->addDays($daysToAdd)));
+            
+            $response = [
+                'status' => true,
+                'expired_date' => $expired_date,
+                'remaining' => 0,
+                'member' => $query,
+            ];
+        }else{
+            $response = [
+                'status' => false,
+                'message' => 'RFID tidak ditemukan',
+            ];
+        }
         return response()->json($response);
     }
 
@@ -69,6 +94,51 @@ class MemberController extends Controller
             
         }   
 
+        return response()->json($response, 200);
+    }
+
+    public function memberUpdate(Request $request)
+    {
+        $data = [
+            'rfid' => $request->rfid,
+            'tgl_awal' => $request->tgl_awal,
+            'nama' => $request->nama,
+            'no_kend' => $request->no_kend,
+            'merk' => $request->merk,
+            'warna' => $request->warna,
+            'kendaraan_id' => $request->kendaraan_id,
+            'keterangan' => $request->keterangan,
+            'jenis_member' => $request->jenis_member,
+        ];
+
+        $rules = [
+            'rfid' => 'required|numeric|digits_between:6,16|unique:member,rfid,'.$request->member_id.',member_id',
+        ];
+  
+        $validator = Validator::make($request->all(), $rules);
+  
+        if($validator->fails()){
+            $response = [
+                'status' => false,
+                'message' => '!!!! RFID tidak boleh duplicate',
+            ];
+        }else{
+            $udpate = Member::where('member_id', $request->member_id)->update($data);
+            if ($udpate) {
+                $response = [
+                    'status' => false,
+                    'message' => 'Member berhasil di simpan',
+                    'member_id' => $request->member_id
+                ];
+            }else{
+                $response = [
+                    'status' => false,
+                    'message' => 'Member Gagal di simpan',
+                ];
+            }
+        }
+
+      
         return response()->json($response, 200);
     }
 
@@ -124,6 +194,7 @@ class MemberController extends Controller
         return response()->json($response, 200);
 
     }
+    
 
     public function ValidasiMember()
     {
