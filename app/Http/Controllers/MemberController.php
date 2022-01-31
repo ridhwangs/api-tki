@@ -25,7 +25,7 @@ class MemberController extends Controller
     public function index(Request $request)
     {
       
-        $query = Member::with('kendaraan')->where('jenis_member', '!=', 'master')->get();
+        $query = Member::with('kendaraan')->where('jenis_member', '!=', 'master')->orderBy('nama','asc')->get();
         $response = [
             'count' => $query->count(),
             'data' => $query
@@ -37,7 +37,7 @@ class MemberController extends Controller
     {
         $query = Member::with('kendaraan')->where('member_id', $request->member_id)->first();
         if($query){
-            $sum_hari = $this->member->member_transaksi($query->rfid)->where('status', 'approve')->sum('hari');
+            $sum_hari = $this->member->member_transaksi()->where('rfid', $query->rfid)->where('status', 'approve')->sum('hari');
             $daysToAdd = $sum_hari;
             $registrasi_date = Carbon::createFromFormat('Y-m-d', $query->tgl_awal);
             $expired_date = date('Y-m-d', strtotime($registrasi_date->addDays($daysToAdd)));
@@ -47,6 +47,7 @@ class MemberController extends Controller
                 'expired_date' => $expired_date,
                 'remaining' => 0,
                 'member' => $query,
+                'member_transaksi' => $this->member->member_transaksi()->where('rfid', $query->rfid)->get(),
             ];
         }else{
             $response = [
@@ -150,28 +151,17 @@ class MemberController extends Controller
                 'rfid' => $request->rfid,
                 'jumlah' => $request->jumlah,
                 'hari' => $request->hari,
-                'jenis' => 'topup',
+                'jenis' => $request->jenis,
+                'shift_id' => $request->shift_id,
+                'operator_id' => $request->operator_id,
                 'created_by' => $request->created_by,
                 'created_at' => date('Y-m-d H:i:s')
             ];
-
-            if (DB::table('member_transaksi')->insert($data)) {
-                DB::statement("SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));");
-                $query = Member::join('member_transaksi','member_transaksi.rfid','member.rfid')
-                        ->selectRaw('member.kendaraan_id, member.no_kend, member.status ,member.jenis_member, member.rfid, member.tgl_awal,SUM(member_transaksi.hari) AS jumlah_hari, SUM(member_transaksi.jumlah) AS saldo')
-                        ->where('member.rfid', $request->rfid)
-                        ->groupBy('member.rfid')
-                        ->first();
-                $registrasi_date = Carbon::createFromFormat('Y-m-d', $query->tgl_awal);
-                $daysToAdd = $query->jumlah_hari;
-                $expired_date = date('Y-m-d', strtotime($registrasi_date->addDays($daysToAdd)));
-                
+            $create = DB::table('member_transaksi')->insert($data);
+            
+            if ($create) {
                 $response = [
                     'status' => true,
-                    'rfid' => $request->rfid,
-                    'registrasi_date' => $query->tgl_awal,
-                    'expired_date' => $expired_date,
-                    'saldo' => $query->saldo,
                     'message' => "Berhasil di topup",
                     'code' => 201
                 ];
@@ -196,7 +186,44 @@ class MemberController extends Controller
     }
     
 
-    public function ValidasiMember()
+     public function ValidasiMember()
+    {
+        Member::query()->where('member.jenis_member', 'abonemen')->update(['status' => 'aktif']);
+        $query = Member::where('member.jenis_member', 'abonemen')->get();
+        $data = [];
+        foreach ($query as $key => $rows) {
+            $sum_hari = $this->member->member_transaksi()->where('rfid', $rows->rfid)->where('status', 'approve')->sum('hari');
+            
+            $registrasi_date = Carbon::createFromFormat('Y-m-d', $rows->tgl_awal);
+            $daysToAdd = $sum_hari;
+            $expired_date = date('Y-m-d', strtotime($registrasi_date->addDays($daysToAdd)));
+           
+            if(date('Y-m-d') >= $expired_date){
+                $dataArr = [
+                    'rfid' => $rows->rfid,
+                ];
+                array_push($data, $dataArr);
+            }
+           
+           
+        }
+
+        $rfid = array_column($data, 'rfid');
+
+        if (Member::whereIn('rfid', $rfid)->update(['status' => 'pasif'])) {
+            $response = [
+                'status' => true,
+                'count' => $query->count(),
+            ];
+        }else{
+            $response = [
+                'status' => false,
+            ];
+        }
+        return response()->json($response);
+    }
+
+    public function ValidasiMemberOld()
     {
         Member::query()->update(['status' => 'aktif']);
         DB::statement("SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));");
