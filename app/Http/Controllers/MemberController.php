@@ -203,6 +203,7 @@ class MemberController extends Controller
         $query = Member::leftJoin('member_transaksi','member_transaksi.rfid','member.rfid')
                 ->selectRaw('member.rfid AS rfid, member.tgl_awal AS tgl_awal, SUM(member_transaksi.hari) AS jumlah_hari')
                 ->where('member.status', 'aktif')
+                ->where('member.jenis_member', 'abonemen')
                 ->groupBy('member.rfid')
                 ->get();
 
