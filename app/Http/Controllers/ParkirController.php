@@ -222,6 +222,10 @@ class ParkirController extends Controller
             $jam = $durasi->h;
             $menit = $durasi->i;
 
+            // $hari = $durasi->d;
+            // $jam = 1;
+            // $menit = 8;
+
             if($result->status == 'masuk'){
                 
                 if($settingTarif->tarif_berlaku == 'flat'){
@@ -272,6 +276,35 @@ class ParkirController extends Controller
             }else{
                 $tarif = $result->tarif;
                 $keterangan = $result->keterangan;
+
+                // $queryTarif = DB::table('tarif_progressive')->where('kendaraan_id', $result->kendaraan_id)->first();
+                // if($jam == 0 && $menit <= 5){
+                //     $tarif = 0;
+                //     $keterangan = 'Toleransi Tarif - Progressive';
+                // }else{
+                //     if ($jam == 0 || $jam == 1 && $menit == 0) {
+                //         $ke = 1;
+                //         $tarif = $queryTarif->tarif_1;
+                //     }elseif ($jam == 1 && $menit > 0 || $jam == 2 && $menit == 0) {
+                //         $ke = 2;
+                //         $tarif = $queryTarif->tarif_2;
+                //     }elseif ($jam == 2 && $menit > 0 || $jam == 3 && $menit == 0) {
+                //         $ke = 3;
+                //         $tarif = $queryTarif->tarif_3;
+                //     }elseif ($jam == 3 && $menit > 0 || $jam == 4 && $menit == 0) {
+                //         $ke = 4;
+                //         $tarif = $queryTarif->tarif_4;
+                //     }elseif ($jam == 4 && $menit > 0 || $jam == 5 && $menit == 0) {
+                //         $ke = 5;
+                //         $tarif = $queryTarif->tarif_5;
+                //     }else{
+                //         $ke = 5;
+                //         $tarif = $queryTarif->tarif_5;
+                //     }
+
+                //     $keterangan = 'Tarif Progressive ke-'. $ke;
+                // }
+
             }
             if($result->status == 'masuk'){
                 $check_out = date('Y-m-d H:i:s');
