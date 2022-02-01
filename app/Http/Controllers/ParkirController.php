@@ -221,13 +221,7 @@ class ParkirController extends Controller
             $hari = $durasi->d;
             $jam = $durasi->h;
             $menit = $durasi->i;
-            // $response = [
-            //     'hari' => $hari,
-            //     'jam' => $jam,
-            //     'menit' => $menit,
-            // ];
-            // return response()->json($response, 200);
-            // die();
+
             if($result->status == 'masuk'){
                 
                 if($settingTarif->tarif_berlaku == 'flat'){
@@ -246,7 +240,7 @@ class ParkirController extends Controller
                         $tarif = 0;
                         $keterangan = 'Toleransi Tarif - Progressive';
                     }else{
-                        if ($jam == 0) {
+                        if ($jam == 0 || $jam == 1) {
                             $ke = 1;
                             $tarif = $queryTarif->tarif_1;
                         }elseif ($jam == 1 && $menit > 0 || $jam == 2 && $menit == 0) {
