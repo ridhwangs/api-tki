@@ -225,7 +225,7 @@ class ParkirController extends Controller
                 
                 if($settingTarif->tarif_berlaku == 'flat'){
                     $queryTarif = DB::table('tarif_flat')->where('kendaraan_id', $result->kendaraan_id)->first();
-                    if($menit <= 5){
+                    if($jam == 0 && $menit <= 5){
                         $tarif = 0;
                         $keterangan = 'Toleransi Tarif - Flat';
                     }else{
@@ -235,7 +235,7 @@ class ParkirController extends Controller
                     
                 }elseif($settingTarif->tarif_berlaku == 'progressive'){
                     $queryTarif = DB::table('tarif_progressive')->where('kendaraan_id', $result->kendaraan_id)->first();
-                    if($menit <= 5){
+                    if($jam == 0 && $menit <= 5){
                         $tarif = 0;
                         $keterangan = 'Toleransi Tarif - Progressive';
                     }else{
