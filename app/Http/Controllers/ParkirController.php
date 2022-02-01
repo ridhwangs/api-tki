@@ -221,6 +221,13 @@ class ParkirController extends Controller
             $hari = $durasi->d;
             $jam = $durasi->h;
             $menit = $durasi->i;
+            // $response = [
+            //     'hari' => $hari,
+            //     'jam' => $jam,
+            //     'menit' => $menit,
+            // ];
+            // return response()->json($response, 200);
+            // die();
             if($result->status == 'masuk'){
                 
                 if($settingTarif->tarif_berlaku == 'flat'){
@@ -254,7 +261,7 @@ class ParkirController extends Controller
                         }elseif ($jam == 4 && $menit > 0 || $jam == 5 && $menit == 0) {
                             $ke = 5;
                             $tarif = $queryTarif->tarif_5;
-                        }elseif ($jam > 5) {
+                        }else{
                             $ke = 5;
                             $tarif = $queryTarif->tarif_5;
                         }
