@@ -92,6 +92,56 @@ class OperatorController extends Controller
         
         return response()->json($response);
     }
+    
+    public function doLoginWithoutTime(Request $request)
+    {
+        $message = '';
+        $status = false;
+
+            $operator = Operator::where([
+                        'username' => $request->username,
+                        'password' => $request->password,
+                        'status' => 1
+                    ]);
+            if($operator->count() > 0){
+                $status = true;
+                // $message = Str::orderedUuid();
+                $message = 'Berhasil login';
+                $data = $operator->first();
+                $insert = [
+                    'operator_id' => $data->operator_id,
+                    'shift_id' => $request->shift_id,
+                    'keterangan' => 'Login',
+                    'created_at' => date('Y-m-d H:i:s')
+                ];
+
+                $shift = Shift::where('shift_id', $request->shift_id)->first();
+
+                DB::table('log_operator')->insert($insert);
+                $response = [
+                    'status' => $status,
+                    'nama' => $data->nama,
+                    'username' => $request->username,
+                    'message' => $message,
+                    'shift_id' => $request->shift_id,
+                    'operator_id' => $data->operator_id,
+                    'nama_shift' => $shift->nama_shift,
+                    'jam_awal' => $shift->jam_awal,
+                    'jam_akhir' => $shift->jam_akhir,
+                    'code' => 200
+                ];
+            }else{
+                $message = 'Username / Password tidak ditemukan, silahkan coba kembali.';
+                $response = [
+                    'status' => $status,
+                    'username' => $request->username,
+                    'message' => $message,
+                    'code' => 404
+                ];
+            }
+        
+        return response()->json($response);
+    }
 
     public function checkMaster(Request $request)
     {
