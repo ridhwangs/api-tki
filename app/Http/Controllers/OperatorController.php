@@ -29,7 +29,7 @@ class OperatorController extends Controller
         return response()->json($shift);
     }
 
-    public function doLoginWithTime(Request $request)
+    public function doLogin(Request $request)
     {
         $message = '';
         $status = false;
@@ -93,7 +93,7 @@ class OperatorController extends Controller
         return response()->json($response);
     }
     
-    public function doLogin(Request $request)
+    public function doLoginWithoutTime(Request $request)
     {
         $message = '';
         $status = false;
