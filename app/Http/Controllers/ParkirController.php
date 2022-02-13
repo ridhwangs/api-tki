@@ -530,7 +530,7 @@ class ParkirController extends Controller
                     'hari' => null,
                     'jam' => null,
                     'menit' => null,
-                    'message' => 'RFID tidak ditemukan',
+                    'message' => 'RFID tidak ditemukan atau sudah keluar',
                     'code' => 404
                 ];
             }
