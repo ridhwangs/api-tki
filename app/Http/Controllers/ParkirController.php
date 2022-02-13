@@ -458,6 +458,7 @@ class ParkirController extends Controller
         }else{
             $where = [
                 'rfid' => $request->rfid,
+                'status' => 'masuk',
             ];
             
             $query = Parkir::where($where)->first();
@@ -520,6 +521,15 @@ class ParkirController extends Controller
             }else{
                 $response = [
                     'status' => false,
+                    'rfid' => null,
+                    'expired_date' => null,
+                    'remaining' => 0,
+                    'member' => null,
+                    'parkir' => null,
+                    'parkir_id' => null,
+                    'hari' => null,
+                    'jam' => null,
+                    'menit' => null,
                     'message' => 'RFID tidak ditemukan',
                     'code' => 404
                 ];
