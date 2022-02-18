@@ -244,10 +244,10 @@ class ParkirController extends Controller
                         $tarif = 0;
                         $keterangan = 'Toleransi Tarif - Progressive';
                     }else{
-                       if ($jam == 0 || $jam == 1 && $menit == 0) {
+                        if (($jam == 0) || ($jam == 1 && $menit == 0)) {
                             $ke = 1;
                             $tarif = $queryTarif->tarif_1;
-                        }elseif ($jam == 1 && $menit > 0 || $jam == 2 && $menit == 0) {
+                        }elseif (($jam == 1 && $menit > 0) || ($jam == 2 && $menit == 0)) {
                             $ke = 2;
                             $tarif = $queryTarif->tarif_2;
                         }elseif ($jam == 2 && $menit > 0 || $jam == 3 && $menit == 0) {

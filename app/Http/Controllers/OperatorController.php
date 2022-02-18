@@ -220,7 +220,8 @@ class OperatorController extends Controller
                         ->join('shift','shift.shift_id','parkir.shift_id')
                         ->join('kendaraan','kendaraan.kendaraan_id','parkir.kendaraan_id')
                         ->whereDate('parkir.check_out', $request->tanggal)->orderBy('parkir.parkir_id','DESC')
-                        ->groupBy('kendaraan.nama_kendaraan')->get();
+                        ->groupBy('kendaraan.nama_kendaraan')
+                        ->groupBy('parkir.kategori')->get();
         $member_transaksi = DB::table('member_transaksi')
                                 ->selectRaw('SUM(member_transaksi.jumlah) AS jumlah, COUNT(*) AS count')
                                 ->where('jenis', 'topup')
