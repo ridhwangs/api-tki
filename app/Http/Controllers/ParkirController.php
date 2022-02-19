@@ -30,8 +30,13 @@ class ParkirController extends Controller
     }
 
     public function index(Request $request)
-    {
-        $response = Gate::where('api_key', $request->api_key)->first();   
+    {   
+        if($request->api_key){
+            $response = Gate::where('api_key', $request->api_key)->first();   
+        }else{
+            $response = Gate::get();
+        }
+       
  
         return response()->json($response, 200);
     }
@@ -44,6 +49,7 @@ class ParkirController extends Controller
             'status' => true,
             'parkir_in' => $parkir_in,
             'parkir_out' => $parkir_out,
+            'master_gate' => Gate::get(),
             'code' => '202'
         ];
         return response()->json($response, 200);
@@ -250,13 +256,13 @@ class ParkirController extends Controller
                         }elseif (($jam == 1 && $menit > 0) || ($jam == 2 && $menit == 0)) {
                             $ke = 2;
                             $tarif = $queryTarif->tarif_2;
-                        }elseif ($jam == 2 && $menit > 0 || $jam == 3 && $menit == 0) {
+                        }elseif (($jam == 2 && $menit > 0) || ($jam == 3 && $menit == 0)) {
                             $ke = 3;
                             $tarif = $queryTarif->tarif_3;
-                        }elseif ($jam == 3 && $menit > 0 || $jam == 4 && $menit == 0) {
+                        }elseif (($jam == 3 && $menit > 0) || ($jam == 4 && $menit == 0)) {
                             $ke = 4;
                             $tarif = $queryTarif->tarif_4;
-                        }elseif ($jam == 4 && $menit > 0 || $jam == 5 && $menit == 0) {
+                        }elseif (($jam == 4 && $menit > 0) || ($jam == 5 && $menit == 0)) {
                             $ke = 5;
                             $tarif = $queryTarif->tarif_5;
                         }else{

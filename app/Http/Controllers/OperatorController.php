@@ -214,14 +214,27 @@ class OperatorController extends Controller
             'parkir.operator_id' => $request->operator_id,
             'parkir.shift_id' => $request->shift_id,
         ];
-
+        
         $parkir = Parkir::where($where)
                         ->selectRaw('SUM(parkir.tarif) AS tarif, kendaraan.nama_kendaraan AS nama_kendaraan, COUNT(*) AS qty')
                         ->join('shift','shift.shift_id','parkir.shift_id')
                         ->join('kendaraan','kendaraan.kendaraan_id','parkir.kendaraan_id')
-                        ->whereDate('parkir.check_out', $request->tanggal)->orderBy('parkir.parkir_id','DESC')
+                        ->where('parkir.kategori', '!=' , 'member')
+                        ->whereDate('parkir.check_out', $request->tanggal)
+                        ->orderBy('parkir.parkir_id','DESC')
                         ->groupBy('kendaraan.nama_kendaraan')
-                        ->groupBy('parkir.kategori')->get();
+                        ->get();
+
+        $member = Parkir::where($where)
+                        ->selectRaw('SUM(parkir.tarif) AS tarif, kendaraan.nama_kendaraan AS nama_kendaraan, COUNT(*) AS qty')
+                        ->join('shift','shift.shift_id','parkir.shift_id')
+                        ->join('kendaraan','kendaraan.kendaraan_id','parkir.kendaraan_id')
+                        ->where('parkir.kategori', 'member')
+                        ->whereDate('parkir.check_out', $request->tanggal)
+                        ->orderBy('parkir.parkir_id','DESC')
+                        ->groupBy('kendaraan.nama_kendaraan')
+                        ->get();
+
         $member_transaksi = DB::table('member_transaksi')
                                 ->selectRaw('SUM(member_transaksi.jumlah) AS jumlah, COUNT(*) AS count')
                                 ->where('jenis', 'topup')
@@ -229,8 +242,10 @@ class OperatorController extends Controller
         $response = [
             'count' => $parkir->count(),
             'data' => $parkir,
+            'data_member' => $member,
             'member' => $member_transaksi,
         ];
+        
         return response()->json($response);
     }
 }
