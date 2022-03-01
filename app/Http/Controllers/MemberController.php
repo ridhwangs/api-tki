@@ -35,9 +35,11 @@ class MemberController extends Controller
         }
         $query = Member::select(\DB::raw('member.*, SUM(member_transaksi.hari) as hari'))
                     ->with('kendaraan')
-                    ->leftJoin('member_transaksi', 'member_transaksi.rfid', '=', 'member.rfid')
+                    ->leftJoin('member_transaksi',function ($join) {
+                        $join->on('member_transaksi.rfid', '=' , 'member.rfid');
+                        $join->where('member_transaksi.status','=','approve');
+                    })
                     ->where($where)
-                    ->where('member_transaksi.status','=','approve')
                     ->groupBy('member.rfid')
                     ->orderBy('nama','asc')->get();
 
