@@ -24,8 +24,23 @@ class MemberController extends Controller
 
     public function index(Request $request)
     {
-      
-        $query = Member::with('kendaraan')->where('jenis_member', '!=', 'master')->orderBy('nama','asc')->get();
+        DB::statement("SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));");
+        $where[] = ['member.jenis_member','!=', 'master'];
+        if(!empty($request->jenis_member)){
+            $where[] = ['member.jenis_member','=', $request->jenis_member];
+        }
+        
+        if(!empty($request->cari)){
+            $where[] = ['member.nama','LIKE', '%'.$request->cari.'%'];
+        }
+        $query = Member::select(\DB::raw('member.*, SUM(member_transaksi.hari) as hari'))
+                    ->with('kendaraan')
+                    ->leftJoin('member_transaksi', 'member_transaksi.rfid', '=', 'member.rfid')
+                    ->where($where)
+                    ->where('member_transaksi.status','=','approve')
+                    ->groupBy('member.rfid')
+                    ->orderBy('nama','asc')->get();
+
         $response = [
             'count' => $query->count(),
             'data' => $query
@@ -47,6 +62,7 @@ class MemberController extends Controller
                 'expired_date' => $expired_date,
                 'remaining' => 0,
                 'member' => $query,
+                'sum_hari' => $sum_hari,
                 'member_transaksi' => $this->member->member_transaksi()->where('rfid', $query->rfid)->get(),
             ];
         }else{
