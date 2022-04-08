@@ -23,6 +23,7 @@ $router->group(['prefix' => 'api'], function () use ($router) {
 
     // operator 
     $router->get('shift',  ['uses' => 'OperatorController@showAllShift']);
+    $router->get('shift/array',  ['uses' => 'OperatorController@showAllShiftArray']);
     $router->post('auth',  ['uses' => 'OperatorController@doLogin']);
     $router->post('auth/master',  ['uses' => 'OperatorController@checkMaster']);
     $router->post('operator/laporan',  ['uses' => 'OperatorController@laporan']);

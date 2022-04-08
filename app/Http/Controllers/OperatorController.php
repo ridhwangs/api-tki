@@ -29,6 +29,15 @@ class OperatorController extends Controller
         return response()->json($shift);
     }
 
+    public function showAllShiftArray()
+    {
+        $shift = Shift::all();
+        $data = [
+            'result' => $shift
+        ];
+        return response()->json($data);
+    }
+
     public function doLoginT(Request $request)
     {
         $message = '';
