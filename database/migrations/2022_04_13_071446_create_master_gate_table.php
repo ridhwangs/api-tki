@@ -23,8 +23,14 @@ class CreateMasterGateTable extends Migration
             $table->integer('arduino_com');
             $table->string('api_key', 128);
             $table->string('ip_address', 16);
+            $table->string('text_title', 256);
+            $table->string('text_caption', 256);
+            $table->string('text_footer', 256);
+            $table->string('text_end', 256);
+            $table->string('version', 256);
             $table->string('created_by', 32);
             $table->dateTime('created_at')->useCurrent();
+            $table->dateTime('updated_at');
         });
     }
 

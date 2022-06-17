@@ -28,6 +28,7 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->post('auth/master',  ['uses' => 'OperatorController@checkMaster']);
     $router->post('operator/laporan',  ['uses' => 'OperatorController@laporan']);
     $router->post('operator/laporan/print',  ['uses' => 'OperatorController@print']);
+    $router->post('operator/profile',  ['uses' => 'OperatorController@profile']);
 
     // menu parkir
     $router->get('parkir',  ['uses' => 'ParkirController@index']);
@@ -65,5 +66,8 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->get('parkir/expired',  ['uses' => 'ParkirController@setExpiredPakir']);
     $router->get('parkir/expired/delete',  ['uses' => 'ParkirController@deleteExpiredPakir']);
     $router->get('member/validasi',  ['uses' => 'MemberController@ValidasiMember']);
+
+    $router->get('generate/ticket', ['uses' => 'GenerateController@generate']);
+    $router->get('ping', ['uses' => 'ParkirController@ping']);
 
 });

@@ -15,7 +15,7 @@ class CreateVoucherTable extends Migration
     {
         Schema::create('voucher', function (Blueprint $table) {
             $table->integer('voucher_id', true);
-            $table->string('barcode_id', 12)->index('barcode_id');
+            $table->string('barcode_id', 12);
             $table->string('kode_toko', 64);
             $table->string('key', 64);
             $table->integer('nominal');

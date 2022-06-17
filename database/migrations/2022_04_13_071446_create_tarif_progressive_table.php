@@ -15,15 +15,16 @@ class CreateTarifProgressiveTable extends Migration
     {
         Schema::create('tarif_progressive', function (Blueprint $table) {
             $table->integer('id', true);
-            $table->integer('kendaraan_id')->index('kendaraan_id');
+            $table->integer('kendaraan_id');
             $table->integer('tarif_1')->nullable();
             $table->integer('tarif_2')->nullable();
             $table->integer('tarif_3')->nullable();
             $table->integer('tarif_4')->nullable();
             $table->integer('tarif_5')->nullable();
-            $table->string('api_key', 256)->nullable()->index('api_key');
+            $table->string('api_key', 256)->nullable();
             $table->string('created_by', 32);
             $table->dateTime('created_at')->useCurrent();
+            $table->dateTime('updated_at');
         });
     }
 

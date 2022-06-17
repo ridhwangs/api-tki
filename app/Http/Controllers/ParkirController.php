@@ -67,7 +67,7 @@ class ParkirController extends Controller
 
         $data = [
             'no_ticket' => $request->no_ticket,
-            'barcode_id' => $barcode_id,
+            'barcode_id' => $request->barcode_id,
             'kendaraan_id' => $kendaraan->kendaraan_id,
             'image_in' => $imageName,
             'check_in' => $request->check_in,
@@ -710,5 +710,15 @@ class ParkirController extends Controller
         $response = Parkir::get();
         return response()->json($response, 200);
 
+    }
+    
+    public function ping()
+    {      
+        $response = [
+            'status' => true,
+            'message' => 'Server is ready ',
+            'current_date' => date('Y-m-d H:i:s'),
+        ];
+        return response()->json($response, 200);
     }
 }

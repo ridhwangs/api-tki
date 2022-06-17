@@ -25,6 +25,7 @@ class CreateOperatorTable extends Migration
             $table->enum('level', ['easy', 'medium', 'hard'])->default('easy');
             $table->string('created_by', 32);
             $table->date('created_at');
+            $table->date('updated_at');
         });
     }
 

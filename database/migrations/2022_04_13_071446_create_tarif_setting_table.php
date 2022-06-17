@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateMemberTransaksiTable extends Migration
+class CreateTarifSettingTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,14 +13,12 @@ class CreateMemberTransaksiTable extends Migration
      */
     public function up()
     {
-        Schema::create('member_transaksi', function (Blueprint $table) {
-            $table->integer('topup_id', true);
-            $table->string('rfid', 11)->index('rfid');
-            $table->integer('jumlah');
-            $table->integer('hari');
-            $table->enum('jenis', ['topup', 'keluar']);
+        Schema::create('tarif_setting', function (Blueprint $table) {
+            $table->string('api_key', 256)->primary();
+            $table->enum('tarif_berlaku', ['flat', 'progressive']);
             $table->string('created_by', 32);
             $table->dateTime('created_at');
+            $table->dateTime('updated_at');
         });
     }
 
@@ -31,6 +29,6 @@ class CreateMemberTransaksiTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('member_transaksi');
+        Schema::dropIfExists('tarif_setting');
     }
 }

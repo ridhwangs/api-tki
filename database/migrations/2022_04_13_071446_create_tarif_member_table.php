@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateTarifFlatTable extends Migration
+class CreateTarifMemberTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,13 +13,14 @@ class CreateTarifFlatTable extends Migration
      */
     public function up()
     {
-        Schema::create('tarif_flat', function (Blueprint $table) {
+        Schema::create('tarif_member', function (Blueprint $table) {
             $table->integer('id', true);
-            $table->integer('kendaraan_id')->index('kendaraan_id');
-            $table->integer('tarif')->nullable();
-            $table->string('api_key', 256)->nullable()->index('api_key');
+            $table->integer('kendaraan_id');
+            $table->string('nama_tarif', 32);
+            $table->integer('jumlah');
             $table->string('created_by', 32);
             $table->dateTime('created_at');
+            $table->dateTime('updated_at');
         });
     }
 
@@ -30,6 +31,6 @@ class CreateTarifFlatTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('tarif_flat');
+        Schema::dropIfExists('tarif_member');
     }
 }

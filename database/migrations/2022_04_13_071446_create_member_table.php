@@ -15,7 +15,7 @@ class CreateMemberTable extends Migration
     {
         Schema::create('member', function (Blueprint $table) {
             $table->integer('member_id', true);
-            $table->string('rfid', 11)->index('rfid');
+            $table->string('rfid', 11)->unique('rfid');
             $table->string('nama', 64)->nullable();
             $table->text('alamat')->nullable();
             $table->string('tempat', 32)->nullable();
@@ -28,12 +28,14 @@ class CreateMemberTable extends Migration
             $table->string('no_identitas', 64)->nullable();
             $table->integer('kendaraan_id')->nullable()->index('kendaraan_id');
             $table->string('no_kend', 12)->nullable();
-            $table->enum('jenis_member', ['abonemen', 'flat', 'free'])->nullable();
+            $table->string('merk', 128)->nullable();
+            $table->string('warna', 128)->nullable();
+            $table->enum('jenis_member', ['abonemen', 'flat', 'free', 'master'])->nullable();
             $table->date('tgl_awal');
             $table->integer('reminder_day')->nullable();
             $table->integer('synchronize')->nullable()->default(0);
+            $table->text('keterangan')->nullable();
             $table->enum('status', ['aktif', 'pasif', 'blokir'])->nullable()->default('pasif');
-            $table->string('created_by', 32);
             $table->dateTime('created_at');
             $table->dateTime('updated_at');
         });
