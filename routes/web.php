@@ -69,6 +69,7 @@ $router->group(['prefix' => 'api'], function () use ($router) {
 
     $router->get('generate/ticket', ['uses' => 'GenerateController@generate']);
 
+    //hunian
     $router->get('ping', ['uses' => 'NetworkController@ping']);
     $router->post('card/read', ['uses' => 'CardController@read']);
 
