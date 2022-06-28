@@ -68,6 +68,8 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->get('member/validasi',  ['uses' => 'MemberController@ValidasiMember']);
 
     $router->get('generate/ticket', ['uses' => 'GenerateController@generate']);
-    $router->get('ping', ['uses' => 'ParkirController@ping']);
+
+    $router->get('ping', ['uses' => 'NetworkController@ping']);
+    $router->post('card/read', ['uses' => 'CardController@read']);
 
 });
