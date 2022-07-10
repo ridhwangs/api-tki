@@ -23,7 +23,7 @@ class GenerateController extends Controller
     }
 
     function generateBarcodeNumber() {
-        $number = mt_rand(date('mdHis'), 9999999999); // better than rand()
+        $number = mt_rand(date('mdHis'), 999999999999); // better than rand()
         // call the same function if the barcode exists already
         if ($this->barcodeNumberExists($number)) {
             return $this->generateBarcodeNumber();
