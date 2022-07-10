@@ -15,7 +15,7 @@ class GenerateController extends Controller
     {
         $response = [
             'no_ticket' => str_pad($this->generateTicketNumber(), 6, '0', STR_PAD_LEFT),
-            'barcode_id' => str_pad($this->generateBarcodeNumber(), 10, '0', STR_PAD_LEFT),
+            'barcode_id' => str_pad($this->generateBarcodeNumber(), 12, '0', STR_PAD_LEFT),
             'tanggal' => date('d F Y'),
             'waktu' => date('H:i:s')
         ];
