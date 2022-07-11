@@ -15,7 +15,7 @@ class GenerateController extends Controller
     {
         $response = [
             'no_ticket' => str_pad($this->generateTicketNumber(), 6, '0', STR_PAD_LEFT),
-            'barcode_id' => str_pad($this->generateBarcodeNumber(), 12, '0', STR_PAD_LEFT),
+            'barcode_id' => '1'.str_pad($this->generateBarcodeNumber(), 11, '0', STR_PAD_LEFT),
             'tanggal' => date('d F Y'),
             'waktu' => date('H:i:s')
         ];
@@ -23,7 +23,7 @@ class GenerateController extends Controller
     }
 
     function generateBarcodeNumber() {
-        $number = mt_rand(date('mdHis'), 999999999999); // better than rand()
+        $number = mt_rand(date('mdHis'), 9999999999); // better than rand()
         // call the same function if the barcode exists already
         if ($this->barcodeNumberExists($number)) {
             return $this->generateBarcodeNumber();
