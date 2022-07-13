@@ -381,6 +381,12 @@ class ParkirController extends Controller
                     'code' => 201
                 ];
             }
+        }else{
+            $response = [
+                'status' => false,
+                'message' => 'Tidak dapat membaca RFID',
+                'code' => 500,
+            ];
         }
         return response()->json($response);  
     }
