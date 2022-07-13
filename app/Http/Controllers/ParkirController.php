@@ -70,7 +70,7 @@ class ParkirController extends Controller
             'barcode_id' => $request->barcode_id,
             'kendaraan_id' => $kendaraan->kendaraan_id,
             'image_in' => $imageName,
-            'check_in' => $request->check_in,
+            'check_in' => date('Y-m-d H:i:s'),
             'kategori' => $request->kategori,
             'status' => 'masuk',
         ];
