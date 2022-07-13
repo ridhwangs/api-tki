@@ -384,8 +384,17 @@ class ParkirController extends Controller
                             'code' => 201,
                         ];
                         }else{
+                            $barcode_id = $request->barcode_id;
+                            $imageName = $request->kategori.'_'.$barcode_id;
+                    
+                            if($request->file('image')){
+                                $request->file('image')->move(storage_path('images'), $imageName);
+                            }
                             $data = [
                                 'rfid' => $request->rfid,
+                                'no_ticket' => $request->no_ticket,
+                                'image_in' => $imageName,
+                                'barcode_id' => $request->barcode_id,
                                 'kendaraan_id' => $query->kendaraan_id,
                                 'check_in' => date('Y-m-d H:i:s'),
                                 'kategori' => 'member',
