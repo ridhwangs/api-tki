@@ -382,7 +382,7 @@ class ParkirController extends Controller
                 ];
             }
         }
-        return response()->json($response, 200);  
+        return response()->json($response);  
     }
 
     public function memberIn(Request $request)
@@ -394,7 +394,7 @@ class ParkirController extends Controller
             $request->file('image')->move(storage_path('images'), $imageName);
         }
         $query = Member::where('rfid', $request->rfid)->first();
-        
+
         $data = [
             'rfid' => $request->rfid,
             'no_ticket' => $request->no_ticket,
