@@ -425,8 +425,6 @@ class ParkirController extends Controller
                                     ];
                                 } 
                             }else{
-                                $data['no_ticket'] = $this->generateTicketNumber();
-                                $data['barcode_id'] = $this->generateBarcodeNumber();
                             
                                 if (Parkir::create($data)) {
                                     $response = [
