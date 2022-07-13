@@ -355,103 +355,97 @@ class ParkirController extends Controller
         return response()->json($response, 200);
     }
 
+    public function readMember(Request $request)
+    {
+        $query = Member::where('rfid', $request->rfid)->first();
+        if(!empty($query)){
+            if($query->jenis_member == 'master'){
+                $response = [
+                    'status' => true,
+                    'rfid' => $request->rfid,
+                    'message' => 'Kartu Master Berhasil Masuk',
+                    'code' => 201
+                ];
+            } elseif($query->status == 'blokir' || $query->status == 'pasif'){
+                $response = [
+                    'status' => false,
+                    'rfid' => $request->rfid,
+                    'message' => 'RFID Kartu tidak aktif status '. $query->status,
+                    'code' => 201,
+                ];
+            }else{
+                $response = [
+                    'status' => true,
+                    'rfid' => $request->rfid,
+                    'message' => 'Member ditemukan',
+                    'code' => 201
+                ];
+            }
+        }
+        return response()->json($response, 200);  
+    }
+
     public function memberIn(Request $request)
     {
-        if($request->rfid == 'reset'){
-            Gate::where('api_key', $request->api_key)->update(['kuota' => DB::raw("`default_kuota`")]);
-            $response = [
-                'status' => false,
-                'rfid' => $request->rfid,
-                'message' => 'Berhasil di reset',
-                'code' => 201
-            ];
+        $barcode_id = $request->barcode_id;
+        $imageName = $request->kategori.'_'.$barcode_id.'.jpg';
+
+        if($request->file('image')){
+            $request->file('image')->move(storage_path('images'), $imageName);
+        }
+        $query = Member::where('rfid', $request->rfid)->first();
+        
+        $data = [
+            'rfid' => $request->rfid,
+            'no_ticket' => $request->no_ticket,
+            'image_in' => $imageName,
+            'barcode_id' => $request->barcode_id,
+            'kendaraan_id' => $query->kendaraan_id,
+            'check_in' => date('Y-m-d H:i:s'),
+            'kategori' => $request->kategori,
+            'no_kend' => $query->no_kend,
+            'status' => 'masuk'
+        ];
+
+        $where = [
+            'rfid' => $request->rfid,
+            'status' => 'masuk'
+        ];
+
+        $validasiParkirDuplicate = Parkir::where($where)->count();
+        if($validasiParkirDuplicate > 0){
+            if (Parkir::where($where)->update($data)) {
+                $response = [
+                    'status' => true,
+                    'rfid' => $request->rfid,
+                    'message' => 'Berhasil update data',
+                    'code' => 201,
+                ];
+            }else{
+                $response = [
+                    'status' => false,
+                    'rfid' => $request->rfid,
+                    'message' => 'Gagal update data',
+                    'code' => 404
+                ];
+            } 
         }else{
-                $query = Member::where('rfid', $request->rfid)->first();
-                if(!empty($query)){
-                    if($query->jenis_member == 'master'){
-                            $response = [
-                                'status' => true,
-                                'rfid' => $request->rfid,
-                                'message' => 'Berhasil membuat data',
-                                'code' => 201
-                            ];
-                    }else{
-                        if($query->status == 'blokir' || $query->status == 'pasif'){
-                        $response = [
-                            'status' => false,
-                            'rfid' => $request->rfid,
-                            'message' => 'RFID Kartu tidak aktif status '. $query->status,
-                            'code' => 201,
-                        ];
-                        }else{
-                            $barcode_id = $request->barcode_id;
-                            $imageName = $request->kategori.'_'.$barcode_id.'.jpg';
-                    
-                            if($request->file('image')){
-                                $request->file('image')->move(storage_path('images'), $imageName);
-                            }
-                            $data = [
-                                'rfid' => $request->rfid,
-                                'no_ticket' => $request->no_ticket,
-                                'image_in' => $imageName,
-                                'barcode_id' => $request->barcode_id,
-                                'kendaraan_id' => $query->kendaraan_id,
-                                'check_in' => date('Y-m-d H:i:s'),
-                                'kategori' => $request->kategori,
-                                'no_kend' => $query->no_kend,
-                                'status' => 'masuk'
-                            ];
-
-                            $where = [
-                                'rfid' => $request->rfid,
-                                'status' => 'masuk'
-                            ];
-
-                            $validasiParkirDuplicate = Parkir::where($where)->count();
-                            if($validasiParkirDuplicate > 0){
-                                if (Parkir::where($where)->update($data)) {
-                                    $response = [
-                                        'status' => true,
-                                        'rfid' => $request->rfid,
-                                        'message' => 'Berhasil update data',
-                                        'code' => 201,
-                                    ];
-                                }else{
-                                    $response = [
-                                        'status' => false,
-                                        'rfid' => $request->rfid,
-                                        'message' => 'Gagal update data',
-                                        'code' => 404
-                                    ];
-                                } 
-                            }else{
-                            
-                                if (Parkir::create($data)) {
-                                    $response = [
-                                        'status' => true,
-                                        'rfid' => $request->rfid,
-                                        'message' => 'Berhasil membuat data',
-                                        'code' => 201
-                                    ];
-                                }else{
-                                    $response = [
-                                        'status' => false,
-                                        'message' => 'Gagal membuat data',
-                                        'rfid' => $request->rfid,
-                                        'code' => 404
-                                    ];
-                                } 
-                            }
-                        }
-                    }
-                }else{
-                    $response = [
-                        'status' => false,
-                        'message' => 'RFID tidak ditemukan',
-                        'rfid' => $request->rfid,
-                        'code' => 404
-                    ];
-                }
+        
+            if (Parkir::create($data)) {
+                $response = [
+                    'status' => true,
+                    'rfid' => $request->rfid,
+                    'message' => 'Berhasil membuat data',
+                    'code' => 201
+                ];
+            }else{
+                $response = [
+                    'status' => false,
+                    'message' => 'Gagal membuat data',
+                    'rfid' => $request->rfid,
+                    'code' => 404
+                ];
+            } 
         }
         return response()->json($response, 200);
     }
