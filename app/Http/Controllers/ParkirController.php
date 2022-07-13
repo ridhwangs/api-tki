@@ -59,7 +59,7 @@ class ParkirController extends Controller
     {
         $kendaraan = DB::table('kendaraan')->where('kategori', $request->kategori)->first();
         $barcode_id = $request->barcode_id;
-        $imageName = $request->kategori.'_'.$barcode_id;
+        $imageName = $request->kategori.'_'.$barcode_id.'.jpg';
 
         if($request->file('image')){
             $request->file('image')->move(storage_path('images'), $imageName);
@@ -385,7 +385,7 @@ class ParkirController extends Controller
                         ];
                         }else{
                             $barcode_id = $request->barcode_id;
-                            $imageName = $request->kategori.'_'.$barcode_id;
+                            $imageName = $request->kategori.'_'.$barcode_id.'.jpg';
                     
                             if($request->file('image')){
                                 $request->file('image')->move(storage_path('images'), $imageName);
