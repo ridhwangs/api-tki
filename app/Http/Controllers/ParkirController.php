@@ -397,7 +397,7 @@ class ParkirController extends Controller
                                 'barcode_id' => $request->barcode_id,
                                 'kendaraan_id' => $query->kendaraan_id,
                                 'check_in' => date('Y-m-d H:i:s'),
-                                'kategori' => 'member',
+                                'kategori' => $request->kategori,
                                 'no_kend' => $query->no_kend,
                                 'status' => 'masuk'
                             ];
